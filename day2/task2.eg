@@ -15,14 +15,10 @@ def input =
 def line_to_data =
     [ L -> let I = index_of " " L in (retain 0 I L, to_int (remove 0 (I+1) L)) ]
 
-def position =
-    [ (HORIZ, DEPTH, AIM) (cons ("forward", X) II) ->
-        position (HORIZ+X, DEPTH+(AIM*X), AIM) II
-    | (HORIZ, DEPTH, AIM) (cons ("down", X) II) ->
-        position (HORIZ, DEPTH, AIM+X) II
-    | (HORIZ, DEPTH, AIM) (cons ("up", X) II) ->
-        position (HORIZ, DEPTH, AIM-X) II
-    | (HORIZ, DEPTH, AIM) nil -> (HORIZ, DEPTH, AIM) ]
+def move =
+    [ (HORIZ, DEPTH, AIM) ("forward", X) -> (HORIZ+X, DEPTH+(AIM*X), AIM) 
+    | (HORIZ, DEPTH, AIM) ("down", X) -> (HORIZ, DEPTH, AIM+X)
+    | (HORIZ, DEPTH, AIM) ("up", X) -> (HORIZ, DEPTH, AIM-X) ]
 
 def main =
-    let II = map line_to_data input in [(X, Y, Z) -> X*Y] (position (0,0,0) II)
+    let II = map line_to_data input in [(X, Y, Z) -> X*Y] (foldl move (0,0,0) II)
