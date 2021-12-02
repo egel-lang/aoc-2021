@@ -1,0 +1,22 @@
+# Advent of Code (AoC) - day 1, task 1
+
+import "prelude.eg"
+import "os.ego"
+
+using System
+using OS
+using List
+
+def input =
+    let L = read_line stdin in
+    if eof stdin then nil else cons L input
+
+def pairs =
+    [ (cons N0 (cons N1 NN)) -> cons (N0, N1) (pairs (cons N1 NN)) 
+    | _ -> nil ]
+
+def larger =
+    filter [ (N0, N1) -> N0 < N1 ]
+
+def main =
+    let II = map to_int input in length (larger (pairs II))

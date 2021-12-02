@@ -1,0 +1,31 @@
+# Advent of Code (AoC) - day 1, task 2
+
+import "prelude.eg"
+import "os.ego"
+
+using System
+using OS
+using List
+using String
+
+def input =
+    let L = read_line stdin in
+    if eof stdin then nil else cons L input
+
+def line_to_data =
+    [ L -> 
+        let I = index_of " " L in
+        let P = (retain 0 I L, to_int (remove 0 (I+1) L)) in
+            P ]
+
+def position =
+    [ (HORIZ, DEPTH, AIM) (cons ("forward", X) II) ->
+        position (HORIZ+X, DEPTH+(AIM*X), AIM) II
+    | (HORIZ, DEPTH, AIM) (cons ("down", X) II) ->
+        position (HORIZ, DEPTH, AIM+X) II
+    | (HORIZ, DEPTH, AIM) (cons ("up", X) II) ->
+        position (HORIZ, DEPTH, AIM-X) II
+    | (HORIZ, DEPTH, AIM) nil -> (HORIZ, DEPTH, AIM) ]
+
+def main =
+    let II = map line_to_data input in [(X, Y, Z) -> X*Y] (position (0,0,0) II)
