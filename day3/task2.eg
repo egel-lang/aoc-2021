@@ -22,9 +22,6 @@ def transpose =
 def count =
     [ B BB -> length (filter [B0 -> B0 == B] BB) ]
 
-def high = 
-    [ BB -> (count false BB) < (count true BB) ]
-
 def bool2int =
     [ B nil             -> B
     | B (cons false BB) -> bool2int (B*2) BB
