@@ -13,10 +13,7 @@ def input =
     if eof stdin then nil else cons L input
 
 def line_to_bools =
-    [ L -> 
-        let BB = unpack L in
-        let BB = map [ '0' -> false | '1' -> true | _ -> none ] BB in
-            BB ]
+    [ L -> map [ '0' -> false | '1' -> true | _ -> none ] (unpack L) ]
 
 def transpose =
     [ (cons nil XX) -> nil
