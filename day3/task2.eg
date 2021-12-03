@@ -13,10 +13,7 @@ def input =
     if eof stdin then nil else cons L input
 
 def line_to_bools =
-    [ L -> 
-        let BB = unpack L in
-        let BB = map [ '0' -> false | '1' -> true | _ -> none ] BB in
-            BB ]
+    [ L -> map [ '0' -> false | '1' -> true | _ -> none ] (unpack L) ]
 
 def transpose =
     [ (cons nil XX) -> nil
@@ -35,10 +32,8 @@ def bool2int =
 
 def winbit =
     [ B BB -> let BB = head (transpose BB) in 
-              if B then
-                 (count false BB) <= (count true BB)
-              else 
-                 not ((count false BB) <= (count true BB)) ]
+              if B then (count false BB) <= (count true BB)
+              else not ((count false BB) <= (count true BB)) ]
             
 def filter_win =
     [ B BB -> filter [BB -> (head BB) == B] BB ]
