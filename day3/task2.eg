@@ -23,9 +23,7 @@ def count =
     [ B BB -> length (filter [B0 -> B0 == B] BB) ]
 
 def bool2int =
-    [ B nil             -> B
-    | B (cons false BB) -> bool2int (B*2) BB
-    | B (cons true BB)  -> bool2int (B*2 + 1) BB ]
+    foldl [N B -> if B then (N*2)+1 else (N*2)] 0
 
 def winbit =
     [ B BB -> let BB = head (transpose BB) in 
@@ -44,4 +42,4 @@ def select =
 
 def main =
     let BB = map line_to_bools input in 
-        (bool2int 0 (select true BB)) * (bool2int 0 (select false BB))
+        (bool2int (select true BB)) * (bool2int (select false BB))
