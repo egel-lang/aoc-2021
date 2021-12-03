@@ -1,0 +1,55 @@
+# Advent of Code (AoC) - day 3, task 2
+
+import "prelude.eg"
+import "os.ego"
+
+using System
+using OS
+using List
+using String
+
+def input =
+    let L = read_line stdin in
+    if eof stdin then nil else cons L input
+
+def line_to_bools =
+    [ L -> 
+        let BB = unpack L in
+        let BB = map [ '0' -> false | '1' -> true | _ -> none ] BB in
+            BB ]
+
+def transpose =
+    [ (cons nil XX) -> nil
+    | XX            -> cons (map head XX) (transpose (map tail XX)) ] 
+
+def count =
+    [ B BB -> length (filter [B0 -> B0 == B] BB) ]
+
+def high = 
+    [ BB -> (count false BB) < (count true BB) ]
+
+def bool2int =
+    [ B nil             -> B
+    | B (cons false BB) -> bool2int (B*2) BB
+    | B (cons true BB)  -> bool2int (B*2 + 1) BB ]
+
+def winbit =
+    [ B BB -> let BB = head (transpose BB) in 
+              if B then
+                 (count false BB) <= (count true BB)
+              else 
+                 not ((count false BB) <= (count true BB)) ]
+            
+def filter_win =
+    [ B BB -> filter [BB -> (head BB) == B] BB ]
+   
+def select =
+    [ B {nil} -> nil
+    | B {BB}  -> BB
+    | B BB    -> let W = winbit B BB in
+                 let BB = map tail (filter_win W BB) in
+                   cons W (select B BB) ]
+
+def main =
+    let BB = map line_to_bools input in 
+        (bool2int 0 (select true BB)) * (bool2int 0 (select false BB))
