@@ -37,11 +37,7 @@ def parse_boards =
             cons LL0 (parse_boards LL1) ]
     
 def parse_input =
-    [ LL -> 
-        let (M,BB) = (head LL, tail LL) in
-        let M = parse_moves M in
-        let BB = parse_boards BB in
-            (M, BB) ]
+    [ LL -> (parse_moves (head LL), parse_boards(tail LL))  ]
 
 # logic
 
