@@ -1,0 +1,67 @@
+# Advent of Code (AoC) - day 4, task 1
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+
+using System
+using OS
+using List
+using String
+
+# utility
+
+def transpose =
+    [ (cons nil XX) -> nil
+    | XX            -> cons (map head XX) (transpose (map tail XX)) ] 
+
+def fix = [ F -> F [ X -> (fix F) X ] ]
+
+# input and parsing
+
+def input =
+    let L = read_line stdin in
+    if eof stdin then nil else cons L input
+
+val number = Regex::compile "[0-9]+" 
+
+def parse_moves =
+    [ L -> map to_int (Regex::matches number L) ]
+
+def parse_boards =
+    [ nil -> nil
+    | LL  -> 
+        let (LL0, LL1) = (take 6 LL, drop 6 LL) in
+        let LL0 = tail LL0 in
+        let LL0 = map [L -> map to_int (Regex::matches number  L)] LL0 in
+            cons LL0 (parse_boards LL1) ]
+    
+def parse_input =
+    [ LL -> 
+        let (M,BB) = (head LL, tail LL) in
+        let M = parse_moves M in
+        let BB = parse_boards BB in
+            (M, BB) ]
+
+# logic
+
+data x
+
+def bingo =
+    [B -> if any (all [ x -> true | _ -> false ]) B then true else
+           any (all [ x -> true | _ -> false ]) (transpose B) ]
+
+def loser = [ {B} -> bingo B | _ -> false ]
+
+def play =
+    [ nil BB -> throw "no more moves"
+    | M BB ->
+        let N = head M in
+        let BB = map (map (map [X -> if N == X then x else X])) BB in
+        if loser BB then (N, head BB) else 
+        let BB = filter [ B -> not (bingo B) ] BB in play (tail M) BB ]
+        
+def main =
+    let (M, BB) = parse_input input in
+    let (N, B)  = play M BB in
+         N * (foldl [N x -> N | N M -> N+M] 0 (flatten B))
