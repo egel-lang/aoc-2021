@@ -47,7 +47,7 @@ def play =
         let N = head M in
         let BB = map (map (map [X -> if N == X then x else X])) BB in
         if loser BB then (N, head BB) else 
-        let BB = filter [ B -> not (bingo B) ] BB in play (tail M) BB ]
+            play (tail M) (filter [ B -> not (bingo B) ] BB) ]
         
 def main =
     let (M, BB) = parse_input input in
