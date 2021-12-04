@@ -9,14 +9,6 @@ using OS
 using List
 using String
 
-# utility
-
-def transpose =
-    [ (cons nil XX) -> nil
-    | XX            -> cons (map head XX) (transpose (map tail XX)) ] 
-
-def fix = [ F -> F [ X -> (fix F) X ] ]
-
 # input and parsing
 
 def input =
