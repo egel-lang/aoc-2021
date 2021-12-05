@@ -23,20 +23,13 @@ def parse_line =
 def hor_or_ver =
     [((X1,Y1),(X2,Y2)) -> or (X1==X2) (Y1==Y2)]
 
+def next =
+    [ FROM TO -> if FROM < TO then FROM+1 else if TO < FROM then FROM- 1 else FROM ]
+
 def to_line =
     [((X1,Y1),(X2,Y2)) ->
         if and (X1 == X2) (Y1 == Y2) then cons (X1,Y1) nil
-        else if X2 < X1 then to_line ((X2,Y2), (X1,Y1))
-        else
-            let XX = 
-                if X1 == X2 then
-                    if Y1 < Y2 then to_line ((X1,Y1 + 1), (X2, Y2))
-                    else to_line ((X1, Y1 - 1), (X2, Y2))
-                else 
-                    if Y1 == Y2 then to_line ((X1 + 1, Y1), (X2, Y2))
-                    else if Y1 < Y2 then to_line ((X1 + 1, Y1 + 1), (X2, Y2))
-                    else to_line ((X1 + 1, Y1 - 1), (X2, Y2))
-            in cons (X1, Y1) XX ]
+        else cons (X1,Y1) (to_line ((next X1 X2, next Y1 Y2), (X2, Y2))) ]
 
 # binary tree
 
