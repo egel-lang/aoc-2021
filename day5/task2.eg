@@ -1,0 +1,69 @@
+# Advent of Code (AoC) - day 5, task 2
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+
+using System
+using OS
+using List
+using String
+
+# input and parsing
+
+def input =
+    let L = read_line stdin in
+    if eof stdin then nil else cons L input
+
+val number = Regex::compile "[0-9]+" 
+
+def parse_line =
+    [ L -> let {A,B,C,D} = map to_int (Regex::matches number L) in ((A,B),(C,D)) ]
+
+def hor_or_ver =
+    [((X1,Y1),(X2,Y2)) -> or (X1==X2) (Y1==Y2)]
+
+def to_line =
+    [((X1,Y1),(X2,Y2)) ->
+        if and (X1 == X2) (Y1 == Y2) then cons (X1,Y1) nil
+        else if X2 < X1 then to_line ((X2,Y2), (X1,Y1))
+        else
+            let XX = 
+                if X1 == X2 then
+                    if Y1 < Y2 then to_line ((X1,Y1 + 1), (X2, Y2))
+                    else to_line ((X1, Y1 - 1), (X2, Y2))
+                else 
+                    if Y1 == Y2 then to_line ((X1 + 1, Y1), (X2, Y2))
+                    else if Y1 < Y2 then to_line ((X1 + 1, Y1 + 1), (X2, Y2))
+                    else to_line ((X1 + 1, Y1 - 1), (X2, Y2))
+            in cons (X1, Y1) XX ]
+
+# binary tree
+
+data branch, leaf
+
+def insert =
+    [ X leaf -> branch (X,1) leaf leaf
+    | X (branch (Y,N) T0 T1) ->
+        if X == Y then branch (X, N+1) T0 T1
+        else if X < Y then branch (Y,N) (insert X T0) T1
+        else branch (Y,N) T0 (insert X T1) ]
+
+def walk =
+    [ T nil -> T
+    | T (cons nil XX) -> walk T XX
+    | T (cons (cons Y YY) XX) -> print Y "\n"; walk (insert Y T) (cons YY XX) ]
+
+def count =
+    [ leaf -> 0
+    | (branch (Y,N) T0 T1) ->
+        if 1 < N then 1 + (count T0) + (count T1)
+        else (count T0) + (count T1) ]
+
+# do it...
+
+def main =
+    let CC = map parse_line input in
+    let LL = map to_line CC in
+    let T = walk leaf LL in
+        count T 
