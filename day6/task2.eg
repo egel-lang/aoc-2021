@@ -16,10 +16,10 @@ val number = Regex::compile "[0-9]+"
 def parse_line = [ L -> map to_int (Regex::matches number L) ]
 
 def insert =
-    [ F0 N0 nil -> cons (F0, N0) nil
-    | F0 N0 (cons (F1, N1) FF) ->
-        if (F0 == F1) then cons (F0, N0+N1) FF
-        else cons (F1, N1) (insert F0 N0 FF) ]
+    [ F0 N0 {} -> {(F0, N0)}
+    | F0 N0 {(F1, N1) | FF} ->
+        if (F0 == F1) then {(F0, N0+N1) | FF}
+        else {(F1, N1) | insert F0 N0 FF} ]
 
 def compact = foldl [FF (F,N) -> insert F N FF] nil
 
