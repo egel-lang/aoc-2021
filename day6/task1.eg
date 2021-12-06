@@ -7,7 +7,6 @@ import "regex.ego"
 using System
 using OS
 using List
-using String
 
 def input = read_line stdin
 
@@ -29,7 +28,6 @@ def day =
     [ FF -> 
         let (ZZ,FF) = split [(F, _) -> F == 0 ] FF in
         compact ((map [(_,N) -> (8,N)] ZZ) ++ (map [(F,N) -> (update F, N)] (ZZ ++ FF))) ]
-
 
 def main =
     let II = parse_line input in
