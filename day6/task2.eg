@@ -27,11 +27,8 @@ def update = [ 0 -> 6 | N -> N - 1 ]
 
 def day =
     [ FF -> 
-        print FF "\n";
-        let ZZ = filter [(F, _) -> F == 0 ] FF in
-        let FF = map [(F,N) ->(update F, N)] FF in 
-        let FF = [ nil -> FF | {(_,N)} -> insert 8 N FF ] ZZ in
-            sort (compact FF) ]
+        let (ZZ,FF) = split [(F, _) -> F == 0 ] FF in
+        compact ((map [(_,N) -> (8,N)] ZZ) ++ (map [(F,N) -> (update F, N)] (ZZ ++ FF))) ]
 
 
 def main =
