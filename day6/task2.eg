@@ -9,8 +9,6 @@ using OS
 using List
 using String
 
-def iter = [ 0 F X -> X | N F X -> iter (N - 1) F (F X) ]
-
 def input = read_line stdin
 
 val number = Regex::compile "[0-9]+" 
