@@ -1,0 +1,44 @@
+# Advent of Code (AoC) - day 6, task 1
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+
+using System
+using OS
+using List
+using String
+
+def input = read_line stdin
+
+val number = Regex::compile "[0-9]+" 
+
+def parse_line = [ L -> map to_int (Regex::matches number L) ]
+
+def insert =
+    [ F0 N0 nil -> cons (F0, N0) nil
+    | F0 N0 (cons (F1, N1) FF) ->
+        if (F0 == F1) then cons (F0, N0+N1) FF
+        else cons (F1, N1) (insert F0 N0 FF) ]
+
+def compact =
+    [ nil -> nil
+    | (cons (F, N) FF) -> insert F N (compact FF) ]
+
+def update = [ 0 -> 6 | N -> N - 1 ]
+
+def day =
+    [ FF -> 
+        print FF "\n";
+        let ZZ = filter [(F, _) -> F == 0 ] FF in
+        let FF = map [(F,N) ->(update F, N)] FF in 
+        let FF = [ nil -> FF | {(_,N)} -> insert 8 N FF ] ZZ in
+            sort (compact FF) ]
+
+def iter =
+    [ F 0 X -> X | F N X -> iter F (N - 1) (F X) ]
+
+def main =
+    let II = parse_line input in
+    let FF = foldl [FF F -> insert F 1 FF] nil II in
+        foldl [M (_,N) -> N+M] 0 (iter day 80 FF)
