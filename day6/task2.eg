@@ -36,9 +36,9 @@ def day =
             sort (compact FF) ]
 
 def iter =
-    [ F 0 X -> X | F N X -> iter F (N - 1) (F X) ]
+    [ 0 F X -> X | N F X -> iter (N - 1) F (F X) ]
 
 def main =
     let II = parse_line input in
     let FF = foldl [FF F -> insert F 1 FF] nil II in
-        foldl [M (_,N) -> N+M] 0 (iter day 256 FF)
+        foldl [M (_,N) -> N+M] 0 (iter 256 day FF)
