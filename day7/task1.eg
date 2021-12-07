@@ -26,5 +26,5 @@ def difference =
 def main =
     let II = parse_line input in 
     let POS = from_to (min II) (max II) in
-    let FF = foldl [LL N -> cons (sum (difference N II)) LL] nil POS in
+    let FF = map [N -> sum (difference N II)] POS in
         min FF
