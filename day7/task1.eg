@@ -1,0 +1,33 @@
+# Advent of Code (AoC) - day 7, task 1
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+
+using System
+using OS
+using List
+
+def input = read_line stdin 
+
+val number = Regex::compile "[0-9]+"
+
+def parse_line = [ L -> map to_int (Regex::matches number L) ]
+
+def min =
+    foldl [I M -> if I < M then I else M ] (1000000000)
+
+def max =
+    foldl [I M -> if M < I then I else M ] (0)
+
+def difference =
+    [ N II -> map [X -> if X < N then N - X else X - N ] II ]
+
+def sum =
+    foldl [X Y -> X + Y] 0
+
+def main =
+    let II = parse_line input in 
+    let POS = from_to (min II) (max II) in
+    let FF = foldl [LL N -> cons (sum (difference N II)) LL] nil POS in
+        min FF
