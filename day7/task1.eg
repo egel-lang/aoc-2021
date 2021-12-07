@@ -14,17 +14,14 @@ val number = Regex::compile "[0-9]+"
 
 def parse_line = [ L -> map to_int (Regex::matches number L) ]
 
-def min =
-    foldl [I M -> if I < M then I else M ] (1000000000)
+def min = foldl [I M -> if I < M then I else M ] (1000000000)
 
-def max =
-    foldl [I M -> if M < I then I else M ] (0)
+def max = foldl [I M -> if M < I then I else M ] (0)
+
+def sum = foldl (+) 0
 
 def difference =
     [ N II -> map [X -> if X < N then N - X else X - N ] II ]
-
-def sum =
-    foldl [X Y -> X + Y] 0
 
 def main =
     let II = parse_line input in 
