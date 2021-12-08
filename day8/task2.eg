@@ -36,7 +36,6 @@ def perms =
 def perm_maps =
     map (Map::nth . Map::from_list) perms
 
-
 # precompute all permutation maps
 val zero_to_nine_maps =
     map
@@ -52,8 +51,6 @@ def find_match =
 
 def entry_to_number =
     [ (LL, RR) -> let F = find_match zero_to_nine_maps LL in foldl [X Y -> X*10 + Y] 0 (map (Map::nth F) RR) ]
-#def match =
-    #[ F -> let ZN = map (sort . F) 
 
 def main =
     let LL = map parse_line input in 
