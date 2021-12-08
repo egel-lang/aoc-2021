@@ -1,0 +1,36 @@
+# Advent of Code (AoC) - day 1, task 1
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+
+using System
+using OS
+using List
+
+def input =
+    let L = read_line stdin in
+    if eof stdin then nil else cons L input
+
+val digits = Regex::compile "[abcdefg]+"
+val bar = Regex::compile "\\|"
+
+def map_tuple =
+    [ F (X,Y) -> (F X, F Y) ]
+
+def parse_line = 
+    [ L -> 
+        let {L,R} = Regex::split bar L in
+        let F = map unpack . Regex::matches digits in
+           map_tuple F (L,R) ]    
+
+val zero_to_nine = map unpack
+     {"abcefg", "cf", "acdeg", "acdfg", "bcdf", 
+      "abdfg", "abdefg", "acf", "abcdefg", "abcdfg" }
+
+val set1478 =
+    map [ N -> length (nth N zero_to_nine) ] {1, 4, 7, 8}
+    
+def main =
+    let LL = map parse_line input in 
+       (length . filter [D -> elem D set1478] . flatten) (map (map length . snd) LL)
