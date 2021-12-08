@@ -1,4 +1,4 @@
-# Advent of Code (AoC) - day 1, task 1
+# Advent of Code (AoC) - day 8, task 1
 
 import "prelude.eg"
 import "os.ego"
