@@ -37,6 +37,7 @@ def perm_maps =
     map (Map::nth . Map::from_list) perms
 
 
+# precompute all permutation maps
 val zero_to_nine_maps =
     map
     [ F -> let LL = map (pack . sort . map F) zero_to_nine in 
