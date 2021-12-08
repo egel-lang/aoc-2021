@@ -40,11 +40,8 @@ val zero_to_nine_maps =
             (Map::from_list . zip LL) (from_to 0 9) ]
     perm_maps
 
-def match_entry =
-    [ F LL -> all (Map::has F) LL ]
-
 def find_match =
-    [ {F|FF} LL -> if match_entry F LL then F else find_match FF LL ]
+    [ {F|FF} LL -> if all (Map::has F) LL then F else find_match FF LL ]
 
 def entry_to_number =
     [ (LL, RR) -> let F = find_match zero_to_nine_maps LL in foldl [X Y -> X*10 + Y] 0 (map (Map::nth F) RR) ]
