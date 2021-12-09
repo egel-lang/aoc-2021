@@ -1,0 +1,46 @@
+# Advent of Code (AoC) - day 9, task 1
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+import "dict.ego"
+
+using System
+using OS
+using List
+
+def min = [ X Y -> if X < Y then X else Y ]
+
+def input =
+    let L = read_line stdin in
+    if eof stdin then nil else cons L input
+
+val digit = Regex::compile "[0-9]"
+
+def parse_line = map to_int . Regex::matches digit   
+
+def dict_from_list =
+    foldl [D (K,V) -> dict_set D K V] dict
+
+def dict_total =
+    [ Z D K -> if dict_has D K then dict_get D K else Z ]
+
+def coordinate_pairs =
+    snd .
+    foldl [((X,Y),LL) -> foldl [((X,Y),L) Z -> ((X,Y+1),{((X,Y),Z)|L})] ((X+1,0),LL)] 
+          ((-1,0),nil) 
+
+def stencil =
+    [LL -> dict_from_list LL ]
+
+def adjacent =
+    [ (X,Y) -> {(X - 1,Y),(X + 1,Y),(X,Y - 1), (X,Y + 1)} ]
+
+def is_low =
+    [ F (X,Y) -> print (X,Y) "\n"; F (X,Y) < (foldl min 10 . map F . adjacent) (X,Y) ]
+
+def main =
+    let LL = map parse_line input in 
+    let CC = coordinate_pairs LL in
+    let F  = stencil CC in
+        foldr [X Y -> X + Y + 1 ] 0 (map (dict_get F) (filter (is_low (dict_total 10 F)) (dict_keys F)))

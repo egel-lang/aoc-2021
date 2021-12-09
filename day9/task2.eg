@@ -1,0 +1,80 @@
+# Advent of Code (AoC) - day 9, task 2
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+import "dict.ego"
+
+using System
+using OS
+using List
+
+def min = [ X Y -> if X < Y then X else Y ]
+
+def input =
+    let L = read_line stdin in
+    if eof stdin then nil else cons L input
+
+val digit = Regex::compile "[0-9]"
+
+def parse_line = map to_int . Regex::matches digit   
+
+def dict_from_list =
+    foldl [D (K,V) -> dict_set D K V] dict
+
+def dict_total =
+    [ Z D K -> if dict_has D K then dict_get D K else Z ]
+
+def dict_update =
+    [ D K V -> if dict_has D K then dict_set D K V else D ]
+
+def coordinate_pairs =
+    snd .
+    foldl [((X,Y),LL) -> foldl [((X,Y),L) Z -> ((X,Y+1),{((X,Y),Z)|L})] ((X+1,0),LL)] 
+          ((-1,0),nil) 
+
+def stencil =
+    [LL -> dict_from_list LL ]
+
+def adjacent =
+    [ (X,Y) -> {(X - 1,Y),(X + 1,Y),(X,Y - 1), (X,Y + 1)} ]
+
+def is_low =
+    [ F (X,Y) -> F (X,Y) < (foldl min 10 . map F . adjacent) (X,Y) ]
+
+def minima =
+    [ F -> (filter (is_low (dict_total 10 F)) (dict_keys F)) ]
+
+def visited =
+    [ D -> foldl [D K -> dict_set D K false] dict (dict_keys D) ]
+
+def flood =
+    [ F V nil -> V
+    | F V {(X,Y)|XX} ->
+        if dict_get V (X,Y) then flood F V XX else
+        if dict_get F (X,Y) == 9 then flood F V XX else
+        dict_set V (X,Y) true;
+        let AA = filter (dict_has V) (adjacent (X,Y)) in
+        let VV = (map (dict_get F)) {(X,Y)| AA} in
+        let MIN = (foldl min 10) VV in
+        dict_set F (X,Y) MIN;
+        flood F V (AA ++ XX) ]
+        
+def basin_size =
+    [ B -> foldl [N P -> if dict_get B P then N+1 else N] 0 (dict_keys B) ]
+
+def print_board =
+    [ F (X,Y) (MAXX, MAXY) ->
+        if X < MAXX then 
+            if Y < MAXY then print (dict_get F (X,Y)); print_board F (X,Y+1) (MAXX, MAXY) 
+            else print "\n"; print_board F (X+1,0) (MAXX, MAXY)
+        else none ]
+
+def debug = [F -> print_board F (0,0) (5, 10)]
+
+def main =
+    let LL = map parse_line input in 
+    let CC = coordinate_pairs LL in
+    let F  = stencil CC in
+    let BB = map [MM -> (flood F (visited F) . [X -> {X}]) MM] (minima F) in
+        (foldl (*) 1 . take 3 . reverse . sort) (map basin_size BB)
