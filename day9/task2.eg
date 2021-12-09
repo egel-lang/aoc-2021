@@ -51,15 +51,6 @@ def flood =
 def basin_size =
     [ B -> foldl [N P -> if dict_get B P then N+1 else N] 0 (dict_keys B) ]
 
-def print_board =
-    [ F (X,Y) (MAXX, MAXY) ->
-        if X < MAXX then 
-            if Y < MAXY then print (dict_get F (X,Y)); print_board F (X,Y+1) (MAXX, MAXY) 
-            else print "\n"; print_board F (X+1,0) (MAXX, MAXY)
-        else none ]
-
-def debug = [F -> print_board F (0,0) (5, 10)]
-
 def main =
     let LL = map parse_line input in 
     let CC = coordinate_pairs LL in
