@@ -55,8 +55,7 @@ def flood =
         if dict_get F (X,Y) == 9 then flood F V XX else
         dict_set V (X,Y) true;
         let AA = filter (dict_has V) (adjacent (X,Y)) in
-        let VV = (map (dict_get F)) {(X,Y)| AA} in
-        let MIN = (foldl min 10) VV in
+        let MIN = (foldl min 10 . map (dict_get F)) {(X,Y)| AA} in
         dict_set F (X,Y) MIN;
         flood F V (AA ++ XX) ]
         
