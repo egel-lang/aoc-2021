@@ -19,28 +19,22 @@ val digit = Regex::compile "[0-9]"
 
 def parse_line = map to_int . Regex::matches digit   
 
-def dict_from_list =
-    foldl [D (K,V) -> dict_set D K V] dict
-
-def dict_total =
-    [ Z D K -> if dict_has D K then dict_get D K else Z ]
-
 def coordinate_pairs =
     snd .
     foldl [((X,Y),LL) -> foldl [((X,Y),L) Z -> ((X,Y+1),{((X,Y),Z)|L})] ((X+1,0),LL)] 
           ((-1,0),nil) 
 
 def stencil =
-    [LL -> dict_from_list LL ]
+    foldl [D (K,V) -> dict_set D K V] dict
 
 def adjacent =
-    [ (X,Y) -> {(X - 1,Y),(X + 1,Y),(X,Y - 1), (X,Y + 1)} ]
+    [ F (X,Y) -> filter (dict_has F) {(X - 1,Y),(X + 1,Y),(X,Y - 1), (X,Y + 1)} ]
 
 def is_low =
-    [ F (X,Y) -> print (X,Y) "\n"; F (X,Y) < (foldl min 10 . map F . adjacent) (X,Y) ]
+    [ F (X,Y) -> (dict_get F (X,Y)) < (foldl min 10 . map (dict_get F) . adjacent F) (X,Y) ]
 
 def main =
     let LL = map parse_line input in 
     let CC = coordinate_pairs LL in
     let F  = stencil CC in
-        foldr [X Y -> X + Y + 1 ] 0 (map (dict_get F) (filter (is_low (dict_total 10 F)) (dict_keys F)))
+        foldr [X Y -> X + Y + 1 ] 0 (map (dict_get F) ((filter (is_low F)) (dict_keys F)))

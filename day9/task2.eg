@@ -51,8 +51,7 @@ def visited =
 def flood =
     [ F V nil -> V
     | F V {(X,Y)|XX} ->
-        if dict_get V (X,Y) then flood F V XX else
-        if dict_get F (X,Y) == 9 then flood F V XX else
+        if (dict_get V (X,Y)) || [_ -> dict_get F (X,Y) == 9] then flood F V XX else
         dict_set V (X,Y) true;
         let AA = filter (dict_has V) (adjacent (X,Y)) in
         let MIN = (foldl min 10 . map (dict_get F)) {(X,Y)| AA} in
