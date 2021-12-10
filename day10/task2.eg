@@ -25,8 +25,7 @@ def look = [ nil -> none | {I|II} -> I ]
 
 def skip = [ nil -> throw "panic" | {I|II} -> II ]
 
-def force =
-    [ C II -> if C == look II then skip II else throw (C, II) ]
+def force = [ C II -> if C == look II then skip II else throw (C, II) ]
     
 data branch
 
