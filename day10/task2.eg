@@ -3,7 +3,6 @@
 import "prelude.eg"
 import "os.ego"
 import "regex.ego"
-
 using System
 using OS
 using List
@@ -31,8 +30,7 @@ def parse_enclosed =
 
 def parse_pair =
     [ nil II  -> throw "panic"
-    | {(O,C)|PP} II -> 
-        if O == look II then parse_enclosed (O,C) II else parse_pair PP II ]
+    | {(O,C)|PP} II -> if O == look II then parse_enclosed (O,C) II else parse_pair PP II ]
 
 def parse_pairs =
     [ II  -> 
