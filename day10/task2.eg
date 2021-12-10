@@ -1,8 +1,8 @@
 # Advent of Code (AoC) - day 10, task 2
-
 import "prelude.eg"
 import "os.ego"
 import "regex.ego"
+
 using System
 using OS
 using List
