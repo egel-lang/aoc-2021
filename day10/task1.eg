@@ -9,9 +9,7 @@ using System
 using OS
 using List
 
-def input =
-    let L = read_line stdin in
-    if eof stdin then nil else cons L input
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
 
 val paren = Regex::compile "[<>\\(\\)\\[\\]\\{\\}]"
 
@@ -36,9 +34,7 @@ def parse_enclosed =
 def parse_pair =
     [ nil II  -> throw "panic"
     | {(O,C)|PP} II -> 
-        if O == look II then 
-            parse_enclosed (O,C) II
-        else parse_pair PP II ]
+        if O == look II then parse_enclosed (O,C) II else parse_pair PP II ]
 
 def parse_pairs =
     [ II  -> 
@@ -54,10 +50,7 @@ def process_line =
             catch [ (E, II) -> error E (look II) ] ]
 
 def score =
-    [ (error _ ')') -> 3
-    | (error _ ']') -> 57
-    | (error _ '}') -> 1197
-    | (error _ '>') -> 25137 ]
+    [ (error _ ')') -> 3 | (error _ ']') -> 57 | (error _ '}') -> 1197 | (error _ '>') -> 25137 ]
 
 def main =
     let LL = map parse_line input in
