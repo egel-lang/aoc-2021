@@ -1,19 +1,14 @@
-# Advent of Code (AoC) - day 10, task 1
+# Advent of Code (AoC) - day 10, task 2
 
 import "prelude.eg"
 import "os.ego"
 import "regex.ego"
-import "dict.ego"
 
 using System
 using OS
 using List
 
-def postpend = [ {} Y -> {Y} | {X|XX} Y -> {X|postpend XX Y} ]
-    
-def input =
-    let L = read_line stdin in
-    if eof stdin then nil else cons L input
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
 
 val paren = Regex::compile "[<>\\(\\)\\[\\]\\{\\}]"
 
@@ -27,7 +22,7 @@ def skip = [ nil -> throw "panic" | {I|II} -> II ]
 
 def force = [ C II -> if C == look II then skip II else throw (C, II) ]
     
-data branch
+data branch, result, error
 
 def parse_enclosed =
     [ (O,C) II -> 
@@ -37,8 +32,7 @@ def parse_enclosed =
 def parse_pair =
     [ nil II  -> throw "panic"
     | {(O,C)|PP} II -> 
-        if O == look II then parse_enclosed (O,C) II
-        else parse_pair PP II ]
+        if O == look II then parse_enclosed (O,C) II else parse_pair PP II ]
 
 def parse_pairs =
     [ II  -> 
@@ -47,18 +41,15 @@ def parse_pairs =
             let (TT, II) = parse_pairs II in (cons T TT, II) 
         else ({}, II) ]
 
-data result, error
-
 def process_line =
     [ II -> try [(TT, nil) -> result TT| (TT, II) -> throw (none, II) ] (parse_pairs II)
             catch [ (E, II) -> error E (look II) ] ]
 
 def complete_line =
     [ CC II ->
-            let R = process_line II in
             [ (result R) -> CC
             | (error C none) -> complete_line (postpend CC C) (postpend II C)
-            | (error C0 C1) -> throw "panic" ] R ]
+            | (error C0 C1) -> throw "panic" ] (process_line II) ]
 
 def score = [ ')' -> 1 | ']' -> 2 | '}' -> 3 | '>' -> 4 ]
 
