@@ -1,0 +1,74 @@
+# Advent of Code (AoC) - day 10, task 1
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+import "dict.ego"
+
+using System
+using OS
+using List
+
+def min = [ X Y -> if X < Y then X else Y ]
+
+def input =
+    let L = read_line stdin in
+    if eof stdin then nil else cons L input
+
+val paren = Regex::compile "[<>\\(\\)\\[\\]\\{\\}]"
+
+def parse_line = (map (head . unpack)) . (Regex::matches paren)   
+
+val group = {('[', ']'), ('<', '>'), ('(', ')'), ('{','}')}
+
+def look = [ nil -> none | {I|II} -> I ]
+
+def skip = [ nil -> throw "panic" | {I|II} -> II ]
+
+def force =
+    [ C II -> if C == look II then skip II else throw (C, II) ]
+    
+data branch
+
+def parse_enclosed =
+    [ (O,C) II -> 
+        let II = force O II in let (TT, II) = parse_pairs II in let II = force C II in
+            (branch O TT C, II) ]
+
+def parse_pair =
+    [ nil II  -> throw "panic"
+    | {(O,C)|PP} II -> 
+        if O == look II then parse_enclosed (O,C) II
+        else parse_pair PP II ]
+
+def parse_pairs =
+    [ II  -> 
+        if elem (look II) (map fst group) then
+            let (T, II) = parse_pair group II in 
+            let (TT, II) = parse_pairs II in (cons T TT, II) 
+        else ({}, II) ]
+
+data result, error
+
+def process_line =
+    [ II -> try [(TT, nil) -> result TT| (TT, II) -> throw (none, II) ] (parse_pairs II)
+            catch [ (E, II) -> error E (look II) ] ]
+
+def add = [ {} Y -> {Y} | {X|XX} Y -> {X|add XX Y} ]
+    
+def complete_line =
+    [ CC II ->
+            let R = process_line II in
+            [ (result R) -> CC
+            | (error C none) -> complete_line (add CC C) (add II C)
+            | (error C0 C1) -> throw "panic" ] R ]
+
+def score = [ ')' -> 1 | ']' -> 2 | '}' -> 3 | '>' -> 4 ]
+
+def mean = [ NN -> let NN = sort NN in nth ((length NN)/2) NN ]
+
+def main =
+    let LL = map parse_line input in
+    let BB = map ([(error _ none) -> true | _ -> false ] . process_line) LL in
+    let LL = (map snd . filter [(B, L) -> B] . zip BB) LL in
+       (mean . map (foldl [N C -> (5*N) + (score C)] 0 . complete_line nil)) LL
