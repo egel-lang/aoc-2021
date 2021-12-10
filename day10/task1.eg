@@ -9,8 +9,6 @@ using System
 using OS
 using List
 
-def min = [ X Y -> if X < Y then X else Y ]
-
 def input =
     let L = read_line stdin in
     if eof stdin then nil else cons L input
