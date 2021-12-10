@@ -9,8 +9,8 @@ using System
 using OS
 using List
 
-def min = [ X Y -> if X < Y then X else Y ]
-
+def postpend = [ {} Y -> {Y} | {X|XX} Y -> {X|postpend XX Y} ]
+    
 def input =
     let L = read_line stdin in
     if eof stdin then nil else cons L input
@@ -54,8 +54,6 @@ def process_line =
     [ II -> try [(TT, nil) -> result TT| (TT, II) -> throw (none, II) ] (parse_pairs II)
             catch [ (E, II) -> error E (look II) ] ]
 
-def postpend = [ {} Y -> {Y} | {X|XX} Y -> {X|postpend XX Y} ]
-    
 def complete_line =
     [ CC II ->
             let R = process_line II in
