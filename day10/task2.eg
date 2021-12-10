@@ -54,13 +54,13 @@ def process_line =
     [ II -> try [(TT, nil) -> result TT| (TT, II) -> throw (none, II) ] (parse_pairs II)
             catch [ (E, II) -> error E (look II) ] ]
 
-def add = [ {} Y -> {Y} | {X|XX} Y -> {X|add XX Y} ]
+def postpend = [ {} Y -> {Y} | {X|XX} Y -> {X|postpend XX Y} ]
     
 def complete_line =
     [ CC II ->
             let R = process_line II in
             [ (result R) -> CC
-            | (error C none) -> complete_line (add CC C) (add II C)
+            | (error C none) -> complete_line (postpend CC C) (postpend II C)
             | (error C0 C1) -> throw "panic" ] R ]
 
 def score = [ ')' -> 1 | ']' -> 2 | '}' -> 3 | '>' -> 4 ]
