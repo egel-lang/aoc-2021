@@ -1,9 +1,10 @@
 # Advent of Code (AoC) - day 9, task 2
 
-import "prelude.eg"
 import "os.ego"
 import "regex.ego"
 import "dict.ego"
+import "prelude.eg"
+import "generator.eg"
 
 using System
 using OS
@@ -13,10 +14,8 @@ def input = let L = read_line stdin in if eof stdin then nil else cons L input
 val digit = Regex::compile "[0-9]"
 def parse_line = map to_int . Regex::matches digit   
 
-def coordinate_pairs = ## write a generator for this
-    snd .
-    foldl [((X,Y),LL) -> foldl [((X,Y),L) Z -> ((X,Y+1),{((X,Y),Z)|L})] ((X+1,0),LL)] 
-          ((-1,0),nil) 
+def to_board = 
+   List::flatten . Gen::to_lists . Gen::zip_2d Gen::space . Gen::from_lists
 
 def print_board = ## write a generator for this
     [ F (X,Y) (MAXX, MAXY) ->
@@ -71,6 +70,5 @@ def find = [ F N X -> F X; if 100 <= flash_get then (N+1) else flash_reset; find
 
 def main =
     let LL = map parse_line input in 
-    let CC = coordinate_pairs LL in
-    let F  = stencil CC in
+    let F = (stencil . to_board) LL in
         find next 0 F
