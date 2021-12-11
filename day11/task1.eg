@@ -69,6 +69,7 @@ def debug =
     [ F ->
         print "flash: " flash_get "\n";
         print_board F (0,0) (10, 10) ]
+
 def next =
     [ F ->  increase_octopi F; 
             flash_octopi F;
@@ -81,4 +82,4 @@ def main =
     let LL = map parse_line input in 
     let CC = coordinate_pairs LL in
     let F  = stencil CC in
-        iter next 100 F
+        iter next 100 F; flash_get
