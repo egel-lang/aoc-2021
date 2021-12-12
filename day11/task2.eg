@@ -2,7 +2,7 @@
 
 import "os.ego"
 import "regex.ego"
-import "dict.ego"
+import "dictionary.eg"
 import "prelude.eg"
 import "generator.eg"
 using System
@@ -16,7 +16,7 @@ def parse_line = map to_int . Regex::matches digit
 def to_board = 
    Gen::to_lists . Gen::zip_2d Gen::space . Gen::from_lists
 
-def stencil = foldl [D (K,V) -> dict_set D K V] dict . List::flatten
+def stencil = dict_from_list . List::flatten
 
 val update_stencil = 
     (stencil . List::map (List::map [((X,Y),V) -> ((X - 1, Y - 1), V)]) . to_board)
@@ -37,7 +37,7 @@ def apply_mask =
         foldl
         [ U (X1,Y1) -> 
             let (X2, Y2) = (X0+X1, Y0+Y1) in
-            if dict_has F (X2,Y2) then dict_set F (X2, Y2) ((dict_get F (X2, Y2)) + (dict_get update_stencil (X1,Y1))) else F ]
+            dict_lazy_update F (X2, Y2) [_ -> (dict_get F (X2, Y2)) + (dict_get update_stencil (X1,Y1))] ]
         F
         (dict_keys update_stencil) ]
  
