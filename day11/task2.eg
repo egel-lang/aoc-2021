@@ -1,4 +1,4 @@
-# Advent of Code (AoC) - day 9, task 2
+# Advent of Code (AoC) - day 11, task 2
 
 import "os.ego"
 import "regex.ego"
@@ -23,7 +23,6 @@ def print_board = ## write a generator for this
             if Y < MAXY then print (dict_get F (X,Y)); print_board F (X,Y+1) (MAXX, MAXY) 
             else print "\n"; print_board F (X+1,0) (MAXX, MAXY)
         else none ]
-
 
 def stencil = foldl [D (K,V) -> dict_set D K V] dict
 
