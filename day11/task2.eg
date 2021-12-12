@@ -15,7 +15,7 @@ val digit = Regex::compile "[0-9]"
 def parse_line = map to_int . Regex::matches digit   
 
 def to_board = 
-   List::flatten . Gen::to_lists . Gen::zip_2d Gen::space . Gen::from_lists
+   Gen::to_lists . Gen::zip_2d Gen::space . Gen::from_lists
 
 def print_board = ## write a generator for this
     [ F (X,Y) (MAXX, MAXY) ->
@@ -24,10 +24,10 @@ def print_board = ## write a generator for this
             else print "\n"; print_board F (X+1,0) (MAXX, MAXY)
         else none ]
 
-def stencil = foldl [D (K,V) -> dict_set D K V] dict
+def stencil = foldl [D (K,V) -> dict_set D K V] dict . List::flatten
 
 val update_stencil = 
-    (stencil . List::flatten . Gen::to_lists . Gen::zip_2d (Gen::map_2d [(X,Y) -> (X - 1, Y - 1)] Gen::space) . Gen::from_lists)
+    (stencil . Gen::to_lists . Gen::zip_2d (Gen::map_2d [(X,Y) -> (X - 1, Y - 1)] Gen::space) . Gen::from_lists)
     {{1, 1, 1}, {1, -100, 1}, {1, 1, 1}}
 
 def increase_octopi =
