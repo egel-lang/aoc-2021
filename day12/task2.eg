@@ -52,5 +52,4 @@ def paths =
 
 def main =
     let LL = map parse_line input in 
-    let G = to_graph LL in let VV = to_visited LL in
         length (paths LL)
