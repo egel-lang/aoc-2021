@@ -22,7 +22,7 @@ val update_stencil =
     (stencil . List::map (List::map [((X,Y),V) -> ((X - 1, Y - 1), V)]) . to_board)
     {{1, 1, 1}, {1, -100, 1}, {1, 1, 1}}
 
-def increase_octopi = dict_map ((+) 1)
+def increase_octopodes = dict_map ((+) 1)
 
 val flash_counter = ref 0
 def flash_get     = get_ref flash_counter
@@ -43,13 +43,13 @@ def apply_mask =
 def find_flash =
     [ F -> foldl [O0 O1 -> if 10 <= (dict_get F O1) then O1 else O0] none (dict_keys F) ]
 
-def flash_octopi =
-    [ F -> [ none -> F | O -> flash_octopus F O; flash_octopi F ] (find_flash F) ] 
+def flash_octopodes =
+    [ F -> [ none -> F | O -> flash_octopus F O; flash_octopodes F ] (find_flash F) ] 
 
-def unflash_octopi =
+def unflash_octopodes =
     [ F -> foldl [F O -> if dict_get F O < 0 then dict_set F O 0 else F ] F (dict_keys F) ]
 
-def next = [ F ->  increase_octopi F; flash_octopi F; unflash_octopi F; F ]
+def next = [ F ->  increase_octopodes F; flash_octopodes F; unflash_octopodes F; F ]
 
 def find = [ F N X -> F X; if 100 <= flash_get then (N+1) else flash_reset; find F (N+1) X ]
 
