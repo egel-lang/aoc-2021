@@ -1,0 +1,57 @@
+# Advent of Code (AoC) - day 12, task 2
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+import "dictionary.eg"
+
+using System
+using OS
+using List
+
+def input =
+    let L = read_line stdin in
+    if eof stdin then nil else cons L input
+
+val upper = Regex::compile "[A-Z]+"
+val hyphen = Regex::compile "-"
+
+data big, small
+
+def parse_line = 
+    [ L -> 
+        let CC = Regex::split hyphen L in
+        let CC = map [C -> if Regex::match upper C then big C else small C ] CC in 
+        let {X,Y} = CC in (X,Y) ]
+
+def reverse_edge = map [(X,Y) -> (Y,X)]
+def edges = [EE -> EE ++ (reverse_edge EE)]
+
+def graph_add_edge =
+    [ D (E0,E1) -> if dict_has D E0 then dict_set D E0 {E1| dict_get D E0} else dict_set D E0 {E1} ]
+
+def to_graph = [ EE -> foldl [G E -> graph_add_edge G E] dict (edges EE) ]
+
+def to_visited = dict_from_list . map [(X, Y) -> (X, 0)] . edges
+def inc_visited = [D V -> dict_set D V ((dict_get D V) + 1) ]
+def dec_visited = [D V -> dict_set D V ((dict_get D V) - 1) ]
+
+def may_visit = [D V -> 
+                    [ (small "start", 1) -> false | (small "end", 1) -> false | (small V, 0) -> true 
+                    | (small V, 1) -> all [(small _, N) -> N <=1 | _ -> true ] (dict_to_list D) 
+                    | (small V, 2) -> false | (_, N) -> true ] (V, dict_get D V) ]
+
+def find =
+    [ V0 V1 G VV -> if not (may_visit VV V0) then none else
+                    inc_visited VV V0; 
+                    if V0 == V1 then dec_visited VV V0; {{V0}} else 
+                    let PP = map [V -> find V V1 G VV] (dict_get G V0) in
+                    dec_visited VV V0;
+                    foldl [PP none -> PP | PP P -> map [P -> {V0|P}] P ++ PP] nil PP ]
+def paths =
+    [ EE -> find (small "start") (small "end") (to_graph EE) (to_visited EE) ]
+
+def main =
+    let LL = map parse_line input in 
+    let G = to_graph LL in let VV = to_visited LL in
+        length (paths LL)

@@ -1,0 +1,55 @@
+# Advent of Code (AoC) - day 12, task 1
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+import "dictionary.eg"
+
+using System
+using OS
+using List
+
+def input =
+    let L = read_line stdin in
+    if eof stdin then nil else cons L input
+
+val upper = Regex::compile "[A-Z]+"
+val hyphen = Regex::compile "-"
+
+data big, small
+
+def parse_line = 
+    [ L -> 
+        let CC = Regex::split hyphen L in
+        let CC = map [C -> if Regex::match upper C then big C else small C ] CC in 
+        let {X,Y} = CC in (X,Y) ]
+
+def reverse_edge = map [(X,Y) -> (Y,X)]
+def edges = [EE -> EE ++ (reverse_edge EE)]
+
+def graph_add_edge =
+    [ D (E0,E1) -> if dict_has D E0 then dict_set D E0 {E1| dict_get D E0} else dict_set D E0 {E1} ]
+
+def to_graph = [ EE -> foldl [G E -> graph_add_edge G E] dict (edges EE) ]
+
+def to_visited = dict_from_list . map [(X, Y) -> (X, false)] . edges
+
+def set_visited = dict_set
+
+def get_visited = [D V -> [(small V, B) -> B | (_,B) -> false] (V, dict_get D V) ]
+
+def find =
+    [ V0 V1 G VV -> # print "find from " V0 " to " V1 "\n";
+                    if get_visited VV V0 then none else
+                    set_visited VV V0 true; 
+                    if V0 == V1 then set_visited VV V0 false; {{V0}} else 
+                    let PP = map [V -> find V V1 G VV] (dict_get G V0) in
+                    set_visited VV V0 false;
+                    foldl [PP none -> PP | PP P -> map [P -> {V0|P}] P ++ PP] nil PP ]
+def paths =
+    [ EE -> find (small "start") (small "end") (to_graph EE) (to_visited EE) ]
+
+def main =
+    let LL = map parse_line input in 
+    let G = to_graph LL in let VV = to_visited LL in
+        length (paths LL)
