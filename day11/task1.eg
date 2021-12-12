@@ -3,41 +3,32 @@
 import "prelude.eg"
 import "os.ego"
 import "regex.ego"
-import "dict.ego"
+import "generator.eg"
+import "dictionary.eg"
 
 using System
 using OS
 using List
 
 def input = let L = read_line stdin in if eof stdin then nil else cons L input
-
 val digit = Regex::compile "[0-9]"
-
 def parse_line = map to_int . Regex::matches digit   
 
-def coordinate_pairs = ## write a generator for this
-    snd .
-    foldl [((X,Y),LL) -> foldl [((X,Y),L) Z -> ((X,Y+1),{((X,Y),Z)|L})] ((X+1,0),LL)] 
-          ((-1,0),nil) 
+def to_board =
+   Gen::to_lists . Gen::zip_2d Gen::space . Gen::from_lists
 
-def print_board = ## write a generator for this
-    [ F (X,Y) (MAXX, MAXY) ->
-        if X < MAXX then 
-            if Y < MAXY then print (dict_get F (X,Y)); print_board F (X,Y+1) (MAXX, MAXY) 
-            else print "\n"; print_board F (X+1,0) (MAXX, MAXY)
-        else none ]
+def stencil = dict_from_list . List::flatten
 
+def print_board = 
+    [ B -> let KK = dict_keys B in 
+        foldl [(X0,Y0) (X1,Y1) -> (if not (X0 == X1) then print "\n" else none);
+               print (dict_get B (X1, Y1)); (X1,Y1) ] (head KK) KK; none ]
 
-def stencil = foldl [D (K,V) -> dict_set D K V] dict
+val update_stencil =
+    (stencil . List::map (List::map [((X,Y),V) -> ((X - 1, Y - 1), V)]) . to_board)
+    {{1, 1, 1}, {1, -100, 1}, {1, 1, 1}}
 
-def update_map = ## generate this once
-    { ((-1, -1), 1), ((-1, 0), 1), ((-1, 1), 1), 
-      ((0,  -1), 1), ((0,  0),-20), ((0 , 1), 1),
-      ((1,  -1), 1), ((1,  0), 1), ((1 , 1), 1) }
-
-val update_stencil = stencil update_map
-
-def increase_octopi =
+def increase_octopodes =
     [ F -> foldl [F (X,Y) -> dict_set F (X,Y) (dict_get F (X,Y) + 1)] F (dict_keys F) ]
 
 val flash_counter = ref 0
@@ -50,7 +41,6 @@ def apply_mask =
     [ F (X0, Y0) ->
         foldl
         [ U (X1,Y1) -> 
-            #print (X0,Y0) (X1, Y1) "\n";
             let (X2, Y2) = (X0+X1, Y0+Y1) in
             if dict_has F (X2,Y2) then dict_set F (X2, Y2) ((dict_get F (X2, Y2)) + (dict_get update_stencil (X1,Y1))) else F ]
         F
@@ -59,27 +49,25 @@ def apply_mask =
 def find_flash =
     [ F -> foldl [O0 O1 -> if 10 <= (dict_get F O1) then O1 else O0] none (dict_keys F) ]
 
-def flash_octopi =
-    [ F -> [ none -> F | O -> flash_octopus F O; flash_octopi F ] (find_flash F) ] 
+def flash_octopodes =
+    [ F -> [ none -> F | O -> flash_octopus F O; flash_octopodes F ] (find_flash F) ] 
 
-def unflash_octopi =
+def unflash_octopodes =
     [ F -> foldl [F O -> if dict_get F O < 0 then dict_set F O 0 else F ] F (dict_keys F) ]
 
 def debug =
     [ F ->
-        print "flash: " flash_get "\n";
-        print_board F (0,0) (10, 10) ]
+        print "flash: " flash_get "\n"; print_board F (0,0) (10, 10); print "\n" ]
 
 def next =
-    [ F ->  increase_octopi F; 
-            flash_octopi F;
-            unflash_octopi F;
+    [ F ->  increase_octopodes F; 
+            flash_octopodes F;
+            unflash_octopodes F;
             debug F; F ]
 
 def iter = [ F 0 X -> X | F N X -> iter F (N - 1) (F X) ]
 
 def main =
     let LL = map parse_line input in 
-    let CC = coordinate_pairs LL in
-    let F  = stencil CC in
+    let F  = (stencil . to_board) LL in
         iter next 100 F; flash_get
