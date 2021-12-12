@@ -27,12 +27,9 @@ def print_board = ## write a generator for this
 
 def stencil = foldl [D (K,V) -> dict_set D K V] dict
 
-def update_map = ## generate this once
-    { ((-1, -1), 1), ((-1, 0), 1), ((-1, 1), 1), 
-      ((0,  -1), 1), ((0,  0),-20), ((0 , 1), 1),
-      ((1,  -1), 1), ((1,  0), 1), ((1 , 1), 1) }
-
-val update_stencil = stencil update_map
+val update_stencil = 
+    (stencil . List::flatten . Gen::to_lists . Gen::zip_2d (Gen::map_2d [(X,Y) -> (X - 1, Y - 1)] Gen::space) . Gen::from_lists)
+    {{1, 1, 1}, {1, -100, 1}, {1, 1, 1}}
 
 def increase_octopi =
     [ F -> foldl [F (X,Y) -> dict_set F (X,Y) (dict_get F (X,Y) + 1)] F (dict_keys F) ]
