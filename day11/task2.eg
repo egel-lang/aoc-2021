@@ -5,7 +5,6 @@ import "regex.ego"
 import "dict.ego"
 import "prelude.eg"
 import "generator.eg"
-
 using System
 using OS
 using List
@@ -17,17 +16,10 @@ def parse_line = map to_int . Regex::matches digit
 def to_board = 
    Gen::to_lists . Gen::zip_2d Gen::space . Gen::from_lists
 
-def print_board = ## write a generator for this
-    [ F (X,Y) (MAXX, MAXY) ->
-        if X < MAXX then 
-            if Y < MAXY then print (dict_get F (X,Y)); print_board F (X,Y+1) (MAXX, MAXY) 
-            else print "\n"; print_board F (X+1,0) (MAXX, MAXY)
-        else none ]
-
 def stencil = foldl [D (K,V) -> dict_set D K V] dict . List::flatten
 
 val update_stencil = 
-    (stencil . Gen::to_lists . Gen::zip_2d (Gen::map_2d [(X,Y) -> (X - 1, Y - 1)] Gen::space) . Gen::from_lists)
+    (stencil . List::map (List::map [((X,Y),V) -> ((X - 1, Y - 1), V)]) . to_board)
     {{1, 1, 1}, {1, -100, 1}, {1, 1, 1}}
 
 def increase_octopi =
@@ -58,9 +50,7 @@ def flash_octopi =
 def unflash_octopi =
     [ F -> foldl [F O -> if dict_get F O < 0 then dict_set F O 0 else F ] F (dict_keys F) ]
 
-def debug = [ F -> print "flash: " flash_get "\n"; print_board F (0,0) (10, 10) ]
-
-def next = [ F ->  increase_octopi F; flash_octopi F; unflash_octopi F; debug F; F ]
+def next = [ F ->  increase_octopi F; flash_octopi F; unflash_octopi F; F ]
 
 def find = [ F N X -> F X; if 100 <= flash_get then (N+1) else flash_reset; find F (N+1) X ]
 
