@@ -24,8 +24,7 @@ def parse_line =
         let CC = map [C -> if Regex::match upper C then big C else small C ] CC in 
         let {X,Y} = CC in (X,Y) ]
 
-def reverse_edge = map [(X,Y) -> (Y,X)]
-def edges = [EE -> EE ++ (reverse_edge EE)]
+def edges = [EE -> EE ++ (map [(X,Y) -> (Y,X)] EE)]
 
 def graph_add_edge =
     [ D (E0,E1) -> if dict_has D E0 then dict_set D E0 {E1| dict_get D E0} else dict_set D E0 {E1} ]
