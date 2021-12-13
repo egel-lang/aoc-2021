@@ -43,7 +43,7 @@ def print_board =
 
 def fold_along_x =
     [ B X -> foldl [B ((Y0,X0),'#') -> if X0 < X then dict_set B (Y0,X0) '#' else dict_set B (Y0, X - (X0 - X)) '#' | B _ -> B ]
-             (board (([(X,Y) -> ((Y/2) -1, X)] . size . dict_keys) B)) (dict_to_list B) ]
+             (board (([(X,Y) -> ((Y/2) - 1, X)] . size . dict_keys) B)) (dict_to_list B) ]
 
 def fold_along_y =
     [ B Y -> foldl [B ((Y0,X0),'#') -> if Y0 < Y then dict_set B (Y0,X0) '#' else dict_set B (Y - (Y0 - Y), X0) '#' | B _ -> B ]
