@@ -1,0 +1,56 @@
+# Advent of Code (AoC) - day 13, task 2
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+import "dictionary.eg"
+import "generator.eg"
+
+using System
+using OS
+using List
+
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
+
+val number = Regex::compile "[0-9]+" 
+val foldx = Regex::compile "fold along x"
+val foldy = Regex::compile "fold along y"
+
+data fold_x, fold_y
+
+def parse_line = 
+    [ L -> 
+        if Regex::look_at number L then let {X,Y} = map to_int (Regex::matches number L) in (X,Y)
+        else if Regex::look_at foldx L then let {X} = map to_int (Regex::matches number L) in fold_x X
+        else if Regex::look_at foldy L then let {Y} = map to_int (Regex::matches number L) in fold_y Y
+        else none ]
+
+def coords = filter [(X,Y) -> true | _ -> false ] 
+def folds  = filter [(fold_x X) -> true | (fold_y Y) -> true | _ -> false ] 
+
+def max = [X Y -> if X < Y then Y else X ]
+def size = foldl [(X0,Y0) (X1,Y1) -> (max X0 X1, max Y0 Y1)] (0,0)
+def board = [(X,Y) -> (dict_from_list . map [C -> (C, '.') ] . flatten . Gen::to_lists) (Gen::take_2d (Y+1) (X+1) Gen::space) ] 
+def marked_board = [CC -> foldl [B (X,Y) -> dict_set B (Y,X) '#'] ((board . size) CC)  CC]
+
+def print_board = 
+    [ B -> let KK = dict_keys B in 
+        foldl [(X0,Y0) (X1,Y1) -> (if not (X0 == X1) then print "\n" else none);
+               print (dict_get B (X1, Y1)); (X1,Y1) ] (head KK) KK; print "\n" ]
+
+def fold_along_x =
+    [ B X -> foldl [B ((Y0,X0),'#') -> if X0 < X then dict_set B (Y0,X0) '#' else dict_set B (Y0, X - (X0 - X)) '#' | B _ -> B ]
+             (board (([(X,Y) -> ((Y/2) -1, X)] . size . dict_keys) B)) (dict_to_list B) ]
+def fold_along_y =
+    [ B Y -> foldl [B ((Y0,X0),'#') -> if Y0 < Y then dict_set B (Y0,X0) '#' else dict_set B (Y - (Y0 - Y), X0) '#' | B _ -> B ]
+             (board (([(X,Y) -> (Y, (X/2) - 1)] . size . dict_keys) B)) (dict_to_list B) ]
+
+def process =
+    [ FF B -> foldl [B (fold_x X) -> fold_along_x B X | B (fold_y Y) -> fold_along_y B Y] B FF ]
+def count =
+    [ B -> foldl [N (C,'#') -> N + 1 | N _ -> N] 0 (dict_to_list B) ]
+
+def main =
+    let LL = map parse_line input in 
+    print_board (process ((folds LL)) (marked_board (coords LL)))
+
