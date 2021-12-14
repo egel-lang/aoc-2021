@@ -1,0 +1,44 @@
+# Advent of Code (AoC) - day 14, task 1
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+import "dictionary.eg"
+import "generator.eg"
+
+using System
+using OS
+using List
+
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
+
+val template = Regex::compile "[A-Z]+" 
+val insert   = Regex::compile "([A-Z]+) -> ([A-Z])" 
+
+def parse_line = [ L -> let {A,B} = Regex::group insert L in 
+                        (([{A,B} -> (A,B)] . unpack) A, (head . unpack) B)]
+def parse = [ LL -> ((unpack.head) LL, (map parse_line.tail.tail) LL) ]
+
+def expansions = dict_from_list
+
+def expand = 
+    [ F {} -> {} | F {A} -> {A} 
+    | F {A,B|CC} -> 
+        if dict_has F (A,B) then {A, dict_get F (A,B)} ++ (expand F {B|CC})
+        else {A|expand F {B|CC}} ]
+
+def elements =
+   dict_keys . dict_from_list . map [X -> (X,0)] . flatten . map [((A,B),C) -> {A,B,C}]
+    
+def count =
+    [ EL T -> map [E -> length (filter [E0 -> E0 == E] T)] EL ]
+
+def min = foldl [X Y -> if X < Y then X else Y] 1000000
+def max = foldl [X Y -> if X < Y then Y else X] 0
+
+def main =
+    let (T,EE) = parse input in 
+    let EL = elements EE in
+    let NN = count EL ((iter 10 (expand (expansions EE)) T)) in
+        (max NN) - (min NN)
+
