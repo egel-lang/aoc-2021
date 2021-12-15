@@ -1,0 +1,61 @@
+# Advent of Code (AoC) - day 11, task 1
+
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+import "generator.eg"
+import "dictionary.eg"
+
+using System
+using OS
+using List
+
+def max = [X Y -> if X < Y then Y else X ]
+def large_int = 100000000000
+
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
+val digit = Regex::compile "[0-9]"
+def parse_line = map to_int . Regex::matches digit   
+
+def risk = dict_from_list . flatten . Gen::to_lists . Gen::zip_2d Gen::space . Gen::from_lists
+def risk_get = dict_get
+
+def end = [D -> foldl [(X0,Y0) (X1,Y1) -> (max X0 X1, max Y0 Y1)] (0,0) (dict_keys D)]
+def print_board = 
+    [ B -> let KK = dict_keys B in 
+        foldl [(X0,Y0) (X1,Y1) -> (if not (X0 == X1) then print "\n" else none);
+               print (dict_get B (X1, Y1)); (X1,Y1) ] (head KK) KK; print "\n" ]
+
+def totals = dict_map [_ -> large_int] . dict_copy
+
+def adjacent = [D (X,Y) -> filter (dict_has D) {(X - 1,Y),(X + 1,Y),(X,Y - 1), (X, Y + 1)}] 
+
+def count = [R -> foldl [N P -> N + dict_get R P] 0 ]
+
+def min_path =
+    [ R PP ->
+        let (N,P) = foldl [(N0, P0) P1 -> let N1 = count R P1 in if N0<N1 then (N0,P0) else (N1,P1)] (large_int, {}) PP in
+        P ]
+
+def path = 
+    [R T TOTAL FROM TO ->
+        print FROM TO "\n";
+        let NEW = TOTAL + (dict_get R FROM) in
+        if (FROM == TO) && [_-> NEW < (dict_get T FROM)]
+        then dict_set T FROM NEW; {FROM}
+        else if NEW < (dict_get T FROM) then
+            dict_set T FROM NEW;
+            let PP = (filter [none -> false| _ -> true] . map [FROM -> path R T NEW FROM TO]) (adjacent R FROM) in
+            if PP == {} then none
+            else let P = (min_path R . map (cons FROM)) PP in P
+        else none ]
+
+def main =
+    let R = (risk . map parse_line) input in
+    let V = totals R in
+    let P = path R V 0 (0,0) (end R) in
+        print_board R;
+        print P;
+        print (count R (tail P)); none
+        #count R (path R V 0 (0,0) (end R))
