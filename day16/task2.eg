@@ -1,11 +1,10 @@
-# Advent of Code (AoC) - day 15, task 1
+# Advent of Code (AoC) - day 16, task 2
 
 import "prelude.eg"
 import "os.ego"
 import "regex.ego"
-import "generator.eg"
-import "dictionary.eg"
 import "search.eg"
+import "dictionary.eg"
 using System
 using OS
 using List
@@ -37,15 +36,14 @@ def literal = ((satisfy (u"0")) <*> \_ -> lookn 4) <+> ((satisfy (u"1")) <*> \_ 
 def operator = (satisfy (u"0") <*> \_ -> lookn 15 <*> \BB -> success (bits2int BB) <*> \N -> lookn N <@> \BB -> (parse_packets BB))
            <+> (satisfy (u"1") <*> \_ -> lookn 11 <*> \BB -> success (bits2int BB) <*> \N -> packetsn N)
 def packet = (lookn 3) <*> \VERSION -> 
-    ((satisfy (u"100")) <*> \_ -> literal <@> \BB -> lit (bits2int BB)) <+> ((lookn 3) <*> \ID -> operator <@> \II -> pack (bits2int VERSION) (bits2int ID) II)
-
+    ((satisfy (u"100")) <*> \_ -> literal <@> \BB -> lit (bits2int BB)) <+> 
+    ((lookn 3) <*> \ID -> operator <@> \II -> pack (bits2int VERSION) (bits2int ID) II)
 def packets = plus packet
 def packetsn = [ 0 -> success {} | N -> packet <*> \P -> packetsn (N - 1) <@> \PP -> {P|PP} ] 
 
 def parse_packet   = [ BB   -> search packet BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
 def parse_packets  = [ BB   -> search (packets) BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
 
-def sum = [ (pack V (lit _)) -> V | (pack V PP) -> V + foldl [N P -> N + (sum P)] 0 PP ]
 def eval = [ (pack _ 0 (lit N)) -> N | (pack _ 0 PP) -> foldl [N M -> N + M] 0 (map eval PP)
            | (pack _ 1 (lit N)) -> N | (pack _ 1 PP) -> foldl [N M -> N * M] 1 (map eval PP)
            | (pack _ 2 (lit N)) -> N | (pack _ 2 PP) -> foldl [N M -> if N < M then N else M ] 100000000 (map eval PP)
@@ -57,5 +55,6 @@ def eval = [ (pack _ 0 (lit N)) -> N | (pack _ 0 PP) -> foldl [N M -> N + M] 0 (
 
 def main =
     let P = (unhex . parse_line) (head input) in
-    let T = parse_packet P in
-        eval T
+    let T = parse_packet P in eval T
+
+
