@@ -32,22 +32,21 @@ def satisfy = [ BB0 -> (lookn (length BB0)) <*> \BB1 -> if BB0 == BB1 then succe
 
 data pack, lit
 
-def literal = ((satisfy (u"0")) <*> \_ -> lookn 4) <+> ((satisfy (u"1")) <*> \_ -> (lookn 4) <*> \BB0 -> literal <@> \BB1 -> BB0++BB1)
+def literal =  (satisfy (u"0") <*> \_ -> lookn 4) <+> ((satisfy (u"1")) <*> \_ -> (lookn 4) <*> \BB0 -> literal <@> \BB1 -> BB0++BB1)
 def operator = (satisfy (u"0") <*> \_ -> lookn 15 <*> \BB -> success (bits2int BB) <*> \N -> lookn N <@> \BB -> (parse_packets BB))
            <+> (satisfy (u"1") <*> \_ -> lookn 11 <*> \BB -> success (bits2int BB) <*> \N -> packetsn N)
 def packet = (lookn 3) <*> \VERSION -> 
     ((satisfy (u"100")) <*> \_ -> literal <@> \BB -> lit (bits2int BB)) <+> 
     ((lookn 3) <*> \ID -> operator <@> \II -> pack (bits2int VERSION) (bits2int ID) II)
-def packets = plus packet
 def packetsn = [ 0 -> success {} | N -> packet <*> \P -> packetsn (N - 1) <@> \PP -> {P|PP} ] 
 
-def parse_packet   = [ BB   -> search packet BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
-def parse_packets  = [ BB   -> search (packets) BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
+def parse_packet   = [ BB -> search packet        BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
+def parse_packets  = [ BB -> search (plus packet) BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
 
-def eval = [ (pack _ 0 (lit N)) -> N | (pack _ 0 PP) -> foldl [N M -> N + M] 0 (map eval PP)
-           | (pack _ 1 (lit N)) -> N | (pack _ 1 PP) -> foldl [N M -> N * M] 1 (map eval PP)
-           | (pack _ 2 (lit N)) -> N | (pack _ 2 PP) -> foldl [N M -> if N < M then N else M ] 100000000 (map eval PP)
-           | (pack _ 3 (lit N)) -> N | (pack _ 3 PP) -> foldl [N M -> if N < M then M else N ] 0         (map eval PP)
+def eval = [ (pack _ 0 PP) -> sum (map eval PP)
+           | (pack _ 1 PP) -> product (map eval PP)
+           | (pack _ 2 PP) -> minimum (map eval PP)
+           | (pack _ 3 PP) -> maximum (map eval PP)
            | (pack _ 5 {P0,P1}) -> if (eval P1) < (eval P0) then 1 else 0
            | (pack _ 6 {P0,P1}) -> if (eval P0) < (eval P1) then 1 else 0
            | (pack _ 7 {P0,P1}) -> if (eval P0) == (eval P1) then 1 else 0 
@@ -56,5 +55,4 @@ def eval = [ (pack _ 0 (lit N)) -> N | (pack _ 0 PP) -> foldl [N M -> N + M] 0 (
 def main =
     let P = (unhex . parse_line) (head input) in
     let T = parse_packet P in eval T
-
 
