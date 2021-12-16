@@ -29,7 +29,7 @@ def look    = [ {} -> fail {} | {B|BB} -> success B BB ]
 def lookn   = [ 0  -> success {} | N -> look <*> \B -> (lookn (N - 1)) <@> \BB -> {B|BB} ]
 def satisfy = [ BB0 -> (lookn (length BB0)) <*> \BB1 -> if BB0 == BB1 then success BB0 else fail ]
 
-data pack, lit
+data op, lit
 
 def literal =  (satisfy (u"0") <*> \_ -> lookn 4)
            <+> ((satisfy (u"1")) <*> \_ -> (lookn 4) <*> \BB0 -> literal <@> \BB1 -> BB0++BB1)
@@ -37,19 +37,19 @@ def operator = (satisfy (u"0") <*> \_ -> lookn 15 <*> \BB -> lookn (bits2int BB)
            <+> (satisfy (u"1") <*> \_ -> lookn 11 <*> \BB -> packetsn (bits2int BB))
 def packet = (lookn 3) <*> \VERSION -> 
     ((satisfy (u"100")) <*> \_ -> literal <@> \BB -> lit (bits2int BB)) <+> 
-    ((lookn 3) <*> \ID -> operator <@> \II -> pack (bits2int VERSION) (bits2int ID) II)
+    ((lookn 3) <*> \ID -> operator <@> \II -> op (bits2int VERSION) (bits2int ID) II)
 def packetsn = [ 0 -> success {} | N -> packet <*> \P -> packetsn (N - 1) <@> \PP -> {P|PP} ] 
 
 def parse_packet   = [ BB -> search packet        BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
 def parse_packets  = [ BB -> search (plus packet) BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
 
-def eval = [ (pack _ 0 PP) -> sum (map eval PP)
-           | (pack _ 1 PP) -> product (map eval PP)
-           | (pack _ 2 PP) -> minimum (map eval PP)
-           | (pack _ 3 PP) -> maximum (map eval PP)
-           | (pack _ 5 {P0,P1}) -> if (eval P1) < (eval P0) then 1 else 0
-           | (pack _ 6 {P0,P1}) -> if (eval P0) < (eval P1) then 1 else 0
-           | (pack _ 7 {P0,P1}) -> if (eval P0) == (eval P1) then 1 else 0 
+def eval = [ (op _ 0 PP) -> sum (map eval PP)
+           | (op _ 1 PP) -> product (map eval PP)
+           | (op _ 2 PP) -> minimum (map eval PP)
+           | (op _ 3 PP) -> maximum (map eval PP)
+           | (op _ 5 {P0,P1}) -> if (eval P1) < (eval P0) then 1 else 0
+           | (op _ 6 {P0,P1}) -> if (eval P0) < (eval P1) then 1 else 0
+           | (op _ 7 {P0,P1}) -> if (eval P0) == (eval P1) then 1 else 0 
            | (lit N) -> N ]
 
 def main =
