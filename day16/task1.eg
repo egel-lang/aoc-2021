@@ -1,0 +1,62 @@
+# Advent of Code (AoC) - day 15, task 1
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+import "generator.eg"
+import "dictionary.eg"
+import "search.eg"
+using System
+using OS
+using List
+using Search
+
+def u = unpack
+
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
+val digit = Regex::compile "[0-9|A-F]*"
+def parse_line = flatten . map u . Regex::matches digit   
+
+val hexit = (dict_from_list . map [(A,B) -> (A, u B)])
+      { ('0', "0000"), ('1', "0001"), ('2', "0010"), ('3', "0011"),
+        ('4', "0100"), ('5', "0101"), ('6', "0110"), ('7', "0111"),
+        ('8', "1000"), ('9', "1001"), ('A', "1010"), ('B', "1011"),
+        ('C', "1100"), ('D', "1101"), ('E', "1110"), ('F', "1111") }
+
+def unhex = flatten . map (dict_get hexit)
+def bits2int = foldl [N '0' -> 2*N | N '1' -> 1+2*N] 0
+
+def look    = [ {} -> fail {} | {B|BB} -> success B BB ]
+def fetch   = [ BB -> success BB {} ]
+def lookn   = [ 0  -> success {} | N -> look <*> \B -> (lookn (N - 1)) <@> \BB -> {B|BB} ]
+def satisfy = [ BB0 -> (lookn (length BB0)) <*> \BB1 -> if BB0 == BB1 then success BB0 else fail ]
+
+data pack, lit
+
+def literal = ((satisfy (u"0")) <*> \_ -> lookn 4) <+> ((satisfy (u"1")) <*> \_ -> (lookn 4) <*> \BB0 -> literal <@> \BB1 -> BB0++BB1)
+def operator = (satisfy (u"0") <*> \_ -> lookn 15 <*> \BB -> success (bits2int BB) <*> \N -> lookn N <@> \BB -> (parse_packets BB))
+           <+> (satisfy (u"1") <*> \_ -> lookn 11 <*> \BB -> success (bits2int BB) <*> \N -> packetsn N)
+def packet = (lookn 3) <*> \VERSION -> 
+    ((satisfy (u"100")) <*> \_ -> literal <@> \BB -> lit (bits2int BB)) <+> ((lookn 3) <*> \ID -> operator <@> \II -> pack (bits2int VERSION) (bits2int ID) II)
+
+def packets = plus packet 
+def packetsn = [ 0 -> success {} | N -> packet <*> \P -> packetsn (N - 1) <@> \PP -> {P|PP} ] 
+
+def parse_packet   = [ BB   -> search packet BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
+def parse_packets  = [ BB   -> search (packets) BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
+def parse_packetsn = [ N BB -> search (packetsn N) BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
+
+def sum = [ (lit _) -> 0 | (pack V _ (lit _)) -> V | (pack V _ PP) -> V + foldl [N P -> print P "\n"; N + (sum P)] 0 PP ]
+def eval = [ (pack _ 0 (lit N)) -> N | (pack _ 0 PP) -> foldl [N M -> N + M] 0 (map eval PP)
+           | (pack _ 1 (lit N)) -> N | (pack _ 1 PP) -> foldl [N M -> N * M] 1 (map eval PP)
+           | (pack _ 2 (lit N)) -> N | (pack _ 2 PP) -> foldl [N M -> if N < M then N else M ] 100000000 (map eval PP)
+           | (pack _ 3 (lit N)) -> N | (pack _ 3 PP) -> foldl [N M -> if N < M then M else N ] 0         (map eval PP)
+           | (pack _ 5 {P0,P1}) -> if (eval P1) < (eval P0) then 1 else 0
+           | (pack _ 6 {P0,P1}) -> if (eval P0) < (eval P1) then 1 else 0
+           | (pack _ 7 {P0,P1}) -> if (eval P0) == (eval P1) then 1 else 0 
+           | (lit N) -> N ]
+
+def main =
+    let P = (unhex . parse_line) (head input) in
+    let T = parse_packet P in
+        sum T
