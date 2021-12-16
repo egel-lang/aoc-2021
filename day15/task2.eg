@@ -1,13 +1,11 @@
-# Advent of Code (AoC) - day 15, task 1
+# Advent of Code (AoC) - day 15, task 2
 
 import "prelude.eg"
 import "os.ego"
 import "regex.ego"
 import "generator.eg"
-
 import "dictionary.eg"
 import "pqueue.ego"
-
 using System
 using OS
 using List
@@ -46,8 +44,8 @@ def dijkstra =
     [ R -> dijkstra_run R (totals R) (dict_set (visited R) (0,0) true) (pqueue_push pqueue 0 (0,0)) ]
 
 def adjust = [ DX DY R -> ((R - 1 + DX + DY) % 9) + 1 ]
-def fiveXfive =
-    [ (XZ, YZ) ((X,Y), R) -> flatten (map [DX -> map [DY -> ((X+(DX*XZ), Y+(DY*YZ)), adjust DX DY R)] (from_to 0 4)] (from_to 0 4)) ]
+def fiveXfive = [ (XZ, YZ) ((X,Y), R) -> 
+   flatten (map [DX -> map [DY -> ((X+(DX*XZ), Y+(DY*YZ)), adjust DX DY R)] (from_to 0 4)] (from_to 0 4)) ]
 def big_board =
     [ R -> (dict_from_list . flatten . map (fiveXfive ([(X,Y) -> (X+1,Y+1)] (end R))) . dict_to_list) R ]
 
@@ -56,3 +54,5 @@ def main =
     let R = big_board R in
     let T = dijkstra R in
         dict_get T (end R) 
+
+
