@@ -32,9 +32,9 @@ def satisfy = [ BB0 -> (lookn (length BB0)) <*> \BB1 -> if BB0 == BB1 then succe
 data op, lit
 
 def literal =  (satisfy (u"0") <*> \_ -> lookn 4)
-           <+> ((satisfy (u"1")) <*> \_ -> (lookn 4) <*> \BB0 -> literal <@> \BB1 -> BB0++BB1)
-def operator = (satisfy (u"0") <*> \_ -> lookn 15 <*> \BB -> lookn (bits BB) <@> \BB -> (parse_packets BB))
-           <+> (satisfy (u"1") <*> \_ -> lookn 11 <*> \BB -> packetsn (bits BB))
+           <+> (satisfy (u"1") <*> \_ -> lookn 4  <*> \BB0 -> literal <@> \BB1 -> BB0++BB1)
+def operator = (satisfy (u"0") <*> \_ -> lookn 15 <*> \BB  -> lookn (bits BB) <@> \BB -> (parse_packets BB))
+           <+> (satisfy (u"1") <*> \_ -> lookn 11 <*> \BB  -> packetsn (bits BB))
 def packet = (lookn 3) <*> \VERSION -> 
     ((satisfy (u"100")) <*> \ID -> literal <@> \BB -> lit (bits VERSION) (bits ID) (bits BB)) <+> 
     ((lookn 3) <*> \ID -> operator <@> \II -> op (bits VERSION) (bits ID) II)
@@ -55,4 +55,5 @@ def eval = [ (op _ 0 PP) -> sum (map eval PP)
 def main =
     let P = (unhex . parse_line) (head input) in
     let T = parse_packet P in eval T
+
 
