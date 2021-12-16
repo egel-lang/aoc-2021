@@ -23,7 +23,7 @@ val hexit = (dict_from_list . map [(A,B) -> (A, u B)])
         ('C', "1100"), ('D', "1101"), ('E', "1110"), ('F', "1111") }
 
 def unhex = flatten . map (dict_get hexit)
-def bits2int = foldl [N '0' -> 2*N | N '1' -> 1+2*N] 0
+def bits = foldl [N '0' -> 2*N | N '1' -> 1+2*N] 0
 
 def look    = [ {} -> fail {} | {B|BB} -> success B BB ]
 def lookn   = [ 0  -> success {} | N -> look <*> \B -> (lookn (N - 1)) <@> \BB -> {B|BB} ]
@@ -33,11 +33,11 @@ data op, lit
 
 def literal =  (satisfy (u"0") <*> \_ -> lookn 4)
            <+> ((satisfy (u"1")) <*> \_ -> (lookn 4) <*> \BB0 -> literal <@> \BB1 -> BB0++BB1)
-def operator = (satisfy (u"0") <*> \_ -> lookn 15 <*> \BB -> lookn (bits2int BB) <@> \BB -> (parse_packets BB))
-           <+> (satisfy (u"1") <*> \_ -> lookn 11 <*> \BB -> packetsn (bits2int BB))
+def operator = (satisfy (u"0") <*> \_ -> lookn 15 <*> \BB -> lookn (bits BB) <@> \BB -> (parse_packets BB))
+           <+> (satisfy (u"1") <*> \_ -> lookn 11 <*> \BB -> packetsn (bits BB))
 def packet = (lookn 3) <*> \VERSION -> 
-    ((satisfy (u"100")) <*> \_ -> literal <@> \BB -> lit (bits2int BB)) <+> 
-    ((lookn 3) <*> \ID -> operator <@> \II -> op (bits2int VERSION) (bits2int ID) II)
+    ((satisfy (u"100")) <*> \ID -> literal <@> \BB -> lit (bits VERSION) (bits ID) (bits BB)) <+> 
+    ((lookn 3) <*> \ID -> operator <@> \II -> op (bits VERSION) (bits ID) II)
 def packetsn = [ 0 -> success {} | N -> packet <*> \P -> packetsn (N - 1) <@> \PP -> {P|PP} ] 
 
 def parse_packet   = [ BB -> search packet        BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
@@ -50,7 +50,7 @@ def eval = [ (op _ 0 PP) -> sum (map eval PP)
            | (op _ 5 {P0,P1}) -> if (eval P1) < (eval P0) then 1 else 0
            | (op _ 6 {P0,P1}) -> if (eval P0) < (eval P1) then 1 else 0
            | (op _ 7 {P0,P1}) -> if (eval P0) == (eval P1) then 1 else 0 
-           | (lit N) -> N ]
+           | (lit _ _ N) -> N ]
 
 def main =
     let P = (unhex . parse_line) (head input) in
