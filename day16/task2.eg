@@ -26,15 +26,15 @@ def unhex = flatten . map (dict_get hexit)
 def bits2int = foldl [N '0' -> 2*N | N '1' -> 1+2*N] 0
 
 def look    = [ {} -> fail {} | {B|BB} -> success B BB ]
-def fetch   = [ BB -> success BB {} ]
 def lookn   = [ 0  -> success {} | N -> look <*> \B -> (lookn (N - 1)) <@> \BB -> {B|BB} ]
 def satisfy = [ BB0 -> (lookn (length BB0)) <*> \BB1 -> if BB0 == BB1 then success BB0 else fail ]
 
 data pack, lit
 
-def literal =  (satisfy (u"0") <*> \_ -> lookn 4) <+> ((satisfy (u"1")) <*> \_ -> (lookn 4) <*> \BB0 -> literal <@> \BB1 -> BB0++BB1)
-def operator = (satisfy (u"0") <*> \_ -> lookn 15 <*> \BB -> success (bits2int BB) <*> \N -> lookn N <@> \BB -> (parse_packets BB))
-           <+> (satisfy (u"1") <*> \_ -> lookn 11 <*> \BB -> success (bits2int BB) <*> \N -> packetsn N)
+def literal =  (satisfy (u"0") <*> \_ -> lookn 4)
+           <+> ((satisfy (u"1")) <*> \_ -> (lookn 4) <*> \BB0 -> literal <@> \BB1 -> BB0++BB1)
+def operator = (satisfy (u"0") <*> \_ -> lookn 15 <*> \BB -> lookn (bits2int BB) <@> \BB -> (parse_packets BB))
+           <+> (satisfy (u"1") <*> \_ -> lookn 11 <*> \BB -> packetsn (bits2int BB))
 def packet = (lookn 3) <*> \VERSION -> 
     ((satisfy (u"100")) <*> \_ -> literal <@> \BB -> lit (bits2int BB)) <+> 
     ((lookn 3) <*> \ID -> operator <@> \II -> pack (bits2int VERSION) (bits2int ID) II)
