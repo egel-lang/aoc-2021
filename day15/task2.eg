@@ -4,7 +4,9 @@ import "prelude.eg"
 import "os.ego"
 import "regex.ego"
 import "generator.eg"
+
 import "dictionary.eg"
+import "pqueue.ego"
 
 using System
 using OS
@@ -28,25 +30,29 @@ def visited = dict_map [_ -> false] . dict_copy
 def adjacent = [D (X,Y) -> filter (dict_has D) {(X - 1,Y),(X + 1,Y),(X,Y - 1), (X, Y + 1)}] 
 def end = [D -> foldl [(X0,Y0) (X1,Y1) -> (max X0 X1, max Y0 Y1)] (0,0) (dict_keys D)]
 
-def pqput =
-    [ (N, V) {} -> {(N,V)}
-    | (N, V) {(N0,V0)|PQ} -> if N < N0 then {(N,V),(N0,V0)|PQ} else {(N0,V0)| pqput (N,V) PQ} ]
-
 def dijkstra_run = 
-    [ R T V {} -> T
-    | R T V {(RISK,P)|PQ} ->
-        print (RISK,P) "\n";
+    [ R T V PQ -> 
+        if pqueue_empty PQ then T else 
+        let (RISK, P) = pqueue_top PQ in
+        pqueue_pop PQ;
         dict_set V P true;
         let ADJ = filter [P -> not (dict_get V P)] (adjacent R P) in
         let PP = map [P -> (RISK + dict_get R P, P)] ADJ in
-        let PQ = foldl [PQ (RISK,P) -> pqput (RISK,P) PQ ] PQ PP in
+        let V  = foldl [V (RISK,P) -> dict_set V P true ] V PP in
+        let PQ = foldl [PQ (RISK,P) -> pqueue_push PQ RISK P ] PQ PP in 
         foldl [T (RISK,P) -> dict_set T P RISK ] T PP;
             dijkstra_run R T V PQ ]
-
 def dijkstra =
-    [ R -> dijkstra_run R (totals R) (dict_set (visited R) (0,0) true) {(0,(0,0))} ]
+    [ R -> dijkstra_run R (totals R) (dict_set (visited R) (0,0) true) (pqueue_push pqueue 0 (0,0)) ]
+
+def adjust = [ DX DY R -> ((R - 1 + DX + DY) % 9) + 1 ]
+def fiveXfive =
+    [ (XZ, YZ) ((X,Y), R) -> flatten (map [DX -> map [DY -> ((X+(DX*XZ), Y+(DY*YZ)), adjust DX DY R)] (from_to 0 4)] (from_to 0 4)) ]
+def big_board =
+    [ R -> (dict_from_list . flatten . map (fiveXfive ([(X,Y) -> (X+1,Y+1)] (end R))) . dict_to_list) R ]
 
 def main =
     let R = (risk . map parse_line) input in
+    let R = big_board R in
     let T = dijkstra R in
-        dict_get T (end R) - dict_get R (0,0)
+        dict_get T (end R) 
