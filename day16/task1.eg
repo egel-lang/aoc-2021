@@ -37,7 +37,7 @@ def literal = ((satisfy (u"0")) <*> \_ -> lookn 4) <+> ((satisfy (u"1")) <*> \_ 
 def operator = (satisfy (u"0") <*> \_ -> lookn 15 <*> \BB -> success (bits2int BB) <*> \N -> lookn N <@> \BB -> (parse_packets BB))
            <+> (satisfy (u"1") <*> \_ -> lookn 11 <*> \BB -> success (bits2int BB) <*> \N -> packetsn N)
 def packet = (lookn 3) <*> \VERSION -> 
-    ((satisfy (u"100")) <*> \_ -> literal <@> \BB -> lit (bits2int BB)) <+> ((lookn 3) <*> \ID -> operator <@> \II -> pack (bits2int VERSION) (bits2int ID) II)
+    ((satisfy (u"100")) <*> \_ -> literal <@> \BB -> lit (bits2int VERSION) (bits2int BB)) <+> ((lookn 3) <*> \ID -> operator <@> \II -> pack (bits2int VERSION) (bits2int ID) II)
 
 def packets = plus packet 
 def packetsn = [ 0 -> success {} | N -> packet <*> \P -> packetsn (N - 1) <@> \PP -> {P|PP} ] 
@@ -45,9 +45,10 @@ def packetsn = [ 0 -> success {} | N -> packet <*> \P -> packetsn (N - 1) <@> \P
 def parse_packet   = [ BB   -> search packet BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
 def parse_packets  = [ BB   -> search (packets) BB [X BB -> X] [X BB -> throw X] [X BB -> throw X] ]
 
-def sum = [ (lit _) -> 0 | (pack V _ (lit _)) -> V | (pack V _ PP) -> V + foldl [N P -> print P "\n"; N + (sum P)] 0 PP ]
+def sum = [ (lit V _) -> V | (pack V0 _ (lit V1 _)) -> V0 + V1 | (pack V _ PP) -> V + foldl [N P -> N + (sum P)] 0 PP ]
 
 def main =
     let P = (unhex . parse_line) (head input) in
     let T = parse_packet P in
+        print T "\n";
         sum T
