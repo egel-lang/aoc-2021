@@ -1,14 +1,11 @@
-# Advent of Code (AoC) - day 16, task 2
+# Advent of Code (AoC) - day 17
 
 import "prelude.eg"
 import "os.ego"
 import "regex.ego"
-import "search.eg"
-import "dictionary.eg"
 using System
 using OS
 using List
-using Search
 
 def signum = [ N -> if N < 0 then (0-1) else if 0 < N then 1 else 0 ]
 def gen = [ XL XH YL YH -> flatten (map [X -> map [Y -> (X,Y)] (from_to YL YH)] (from_to XL XH)) ]
@@ -45,5 +42,3 @@ def main =
     let A = parse_line (head input) in
     let YY = all A in
         print (maximum YY) "\n"; print (length YY) "\n"; none
-
-
