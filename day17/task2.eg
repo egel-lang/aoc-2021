@@ -1,0 +1,49 @@
+# Advent of Code (AoC) - day 16, task 2
+
+import "prelude.eg"
+import "os.ego"
+import "regex.ego"
+import "search.eg"
+import "dictionary.eg"
+using System
+using OS
+using List
+using Search
+
+def signum = [ N -> if N < 0 then (0-1) else if 0 < N then 1 else 0 ]
+def gen = [ XL XH YL YH -> flatten (map [X -> map [Y -> (X,Y)] (from_to YL YH)] (from_to XL XH)) ]
+
+data probe, area
+
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
+val number = Regex::compile "-?[0-9]+" 
+def parse_line = [{X0,X1,Y0,Y1} -> area X0 X1 Y0 Y1 ] . map to_int . Regex::matches number   
+
+def probe_step =
+    [ (probe X Y VX VY) -> probe (X+VX) (Y+VY) (VX - (signum VX)) (VY - 1) ] 
+        
+def within_target =
+    [ (area XL XH YL YH) (probe X Y _ _) -> 
+        (XL <= X) && [_ -> (X <= XH) && [_ -> (YL <= Y) && [_->Y <= YH ]]] ]
+
+def fail = [ (area XL XH YL YH) (probe X Y VX VY) -> (Y < YL) || [_-> XH < X ] ]
+
+def path =
+    [ A P -> if fail A P then throw none else if within_target A P then {P}
+             else {P| path A (probe_step P)} ]
+
+def simulate = [ VX VY A -> ((VX,VY), path A (probe 0 0 VX VY)) ]
+
+def proj_Y = [((VX,VY),PP) -> maximum (map [(probe _ Y _ _) -> Y] PP) ]
+
+def all = [ (area XL XH YL YH) -> 
+       filter [ none -> false | _ -> true ]
+       (map [(VX,VY) -> try proj_Y (simulate VX VY (area XL XH YL YH)) catch id ]
+           (gen 0 XH YL (0-YL))) ]
+
+def main =
+    let A = parse_line (head input) in
+    let YY = all A in
+        print (maximum YY) "\n"; print (length YY) "\n"; none
+
+
