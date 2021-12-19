@@ -1,0 +1,69 @@
+# Advent of Code (AoC) - day 18, task 1
+
+import "prelude.eg" import "os.ego" import "regex.ego" import "search.eg" import "dictionary.eg"
+using System using OS using List using Search
+
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
+val digit = Regex::compile "[0-9]"
+
+def look     = [ {} -> fail {} | {B|BB} -> success B BB ]
+def is_char  = [ C0 -> look <*> \C1 -> if C0 == C1 then success C0 else fail ]
+def is_digit = look <*> \C -> if Regex::match digit (pack {C}) then success (to_int C) else fail
+
+data pair, leaf
+def parse_tree =
+    (is_digit <@> \D -> leaf D) <+>
+    (is_char '[' <*> \_ -> parse_tree <*> \T0 -> is_char ','
+                 <*> \_ -> parse_tree <*> \T1 -> is_char ']' <@> \_ -> pair T0 T1) 
+def parse_line = [ L -> (search (parse_tree) L [X CC -> X] [X CC -> throw X] [X CC -> throw X]) ]
+def unparse = [ (leaf D) -> {String::chr (D+48)} | (pair L R) -> {'['} ++ (unparse L) ++ {','} ++ (unparse R) ++ {']'} ]
+def to_string = pack . unparse
+
+data top, left, right
+def to_zip     = [ T -> (T, 1, top) ]
+def from_zip   = [ (T,N,top) -> T | (T,N,C) -> from_zip (move_up (T,N,C)) ]
+def move_left  = [ (pair L R,N,C) -> (L,N+1, left C R) ]
+def move_right = [ (pair L R,N,C) -> (R,N+1, right L C) ]
+def move_up    = [ (T,N,left C R) -> (pair T R, N - 1, C) | (T,N, right L C) -> (pair L T, N - 1, C) ]
+def go_left    = move_left . move_up
+def go_right   = move_right . move_up
+
+def apply_left  = # true, moving up; false, moving down
+    [ true  F (T,N, left C R) -> (move_left . apply_left true F. move_up) (T,N, left C R)
+    | true  F (T,N, right L C) -> (go_right . apply_left false F . go_left)  (T,N, right L C)
+    | false F (leaf D,N,C)  -> (leaf (F D), N,C)
+    | false F (pair X Y,N,C) -> (move_up . apply_left false F . move_right) (pair X Y,N,C)
+    | F _ C -> C ]
+def apply_right = 
+    [ true  F (T,N, right L C) -> (move_right . apply_right true F. move_up) (T,N, right L C)
+    | true  F (T,N, left C R) -> (go_left . apply_right false F . go_right)  (T,N, left C R)
+    | false F (leaf D,N,C)  -> (leaf (F D), N,C)
+    | false F (pair X Y,N,C) -> (move_up . apply_right false F . move_left) (pair X Y,N,C)
+    | F _ C -> C ]
+def try_split = 
+    [ (leaf D,N,C) ->
+        if 9 < D then 
+            let R = (pair (leaf (D/2)) (leaf ((D+1)/2)),N,C) in try try_explode R catch [ none -> R ]
+       else throw none
+    | (pair X Y,N,C) -> 
+        try try_split (move_left (pair X Y,N,C))
+        catch [ none -> try_split (move_right (pair X Y,N,C)) ] ]
+def try_explode = 
+    [ (leaf D,N,C) -> throw none
+    | (pair (leaf X) (leaf Y),N,C) -> 
+        if N < 5 then throw none else ([(T,N,C) ->(leaf 0,N,C)] . apply_left true ((+) X). apply_right true ((+) Y)) (pair (leaf X) (leaf Y),N,C) 
+    | (pair X Y,N,C) ->
+        try try_explode (move_left (pair X Y,N,C))
+        catch [ none -> try_explode (move_right (pair X Y,N,C)) ] ]
+
+def action = [ Z -> try try_explode Z catch [ none -> try_split Z ] ]
+def reduce = [ Z -> [ none -> Z | Z -> reduce ((to_zip.from_zip) Z) ] (try action Z catch id) ]
+def add    = [ Z0 Z1 -> let Z2 = (from_zip . reduce . to_zip) (pair Z0 Z1) in print (to_string Z0)"\n+\n"(to_string Z1)"\n=\n"(to_string Z2)"\n\n"; Z2 ]
+def magnitude = [ (leaf D) -> D | (pair X Y) -> 3 * (magnitude X) + 2 * (magnitude Y) ]
+def pairs = [XX -> flatten (map [P0 -> map [P1 -> (P0,P1)] XX ] XX) ]
+
+def main = 
+    let TT = map (parse_line . unpack) input in
+       (maximum . map magnitude . map [(X,Y) -> add X Y] .  filter [(X,Y) -> not (X == Y)] . pairs) TT
+
+
