@@ -1,0 +1,52 @@
+# Advent of Code (AoC) - day 20, task 1
+
+import "prelude.eg" import "os.ego" import "regex.ego" import "generator.eg" import "dictionary.eg"
+using System using OS using List
+
+def min = [ X Y -> if X < Y then X else Y ]
+def max = [ X Y -> if X < Y then Y else X ]
+
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
+val pixel = Regex::compile "[.#]+"
+def parse_line = [{P} -> P | _ -> none ] . map unpack  . Regex::matches pixel
+def enhancement = [L -> (dict_from_list . Gen::to_list) (Gen::zip (Gen::from 0) (Gen::from_list L)) ]
+def image  = dict_from_list . flatten . Gen::to_lists . Gen::zip_2d Gen::space . Gen::from_lists
+def parse_input = [LL -> (enhancement (head LL), ('.', image ((tail) LL))) ]
+
+
+def begin = [CC -> foldl [(X0,Y0) (X1,Y1) -> (min X0 X1, min Y0 Y1)] (max_int,max_int) CC]
+def end   = [CC -> foldl [(X0,Y0) (X1,Y1) -> (max X0 X1, max Y0 Y1)] (0,0) CC]
+def add   = [(X0,Y0) (X1,Y1) -> (X0+X1,Y0+Y1)]
+def pairs = [XX YY -> flatten (map [X -> map [Y -> (X,Y)] YY ] XX)]
+def image_get = [(C,D) P -> dict_nth C D P]
+def image_empty = [C (X,Y) -> (C, (dict_from_list . map [P -> (P,C)]) (pairs (from_to 0 X) (from_to 0 Y)))]
+def image_move = [DP (C,D) -> (C, foldl [D0 P -> dict_set D0 (add P DP) (dict_get D P)] dict (dict_keys D))]
+def image_map = [(C0,D0) (C1,D1) -> (C1, foldl [D1 P -> dict_set D1 P (dict_get D0 P)] D1 (dict_keys D0))]
+def image_fix = 
+    [(C,D) -> 
+        let L = (map fst . filter [(P,C0) -> not (C == C0)] . dict_to_list) D in 
+        let (X0,Y0) = begin L in let (X1,Y1) = end L in 
+        let D = image_move (2 - X0, 2 - Y0) (C,D) in
+        let E = image_empty C (4 + X1 - X0, 4 + Y1 - Y0) in
+            image_map D E ]
+def print_board =
+    [ B -> let KK = dict_keys B in
+        foldl [(X0,Y0) (X1,Y1) -> (if not (X0 == X1) then print "\n" else none);
+               print (dict_get B (X1, Y1)); (X1,Y1) ] (head KK) KK; none ]
+def print_image = [(C,D) -> print_board D; print "\nouter: " C "\n"]
+
+def box = [(X,Y) -> map (add (X,Y)) (pairs (from_to (0-1) 1) (from_to (0-1) 1))]
+def value = [I P -> foldl [N '.' -> 2*N | N '#' -> 1+2*N] 0 (map (image_get I) (box P))]
+def step = [E I -> 
+            let (C0,D0) = image_fix I in # print_image (C0,D0);
+            let C1 = dict_get E (value (C0,D0) (0 - 1,0 - 1)) in
+            let D1 = foldl [D1 P -> dict_set D1 P (dict_get E (value (C0,D0) P))] dict (dict_keys D0) in
+                (C1,D1) ]
+def count = [(C,D) -> (length . filter [(P,'#') -> true | _ -> false] . dict_to_list) D ]
+
+def main = 
+    let (E,I) = (parse_input. filter [ none -> false | _ -> true ] . map parse_line) input in
+        #print_image (iter 2 (step E) I); print "\n";
+        #none
+        count (iter 2 (step E) I)
+
