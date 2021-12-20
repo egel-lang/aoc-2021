@@ -3,16 +3,12 @@
 import "prelude.eg" import "os.ego" import "regex.ego" import "generator.eg" import "dictionary.eg"
 using System using OS using List
 
-def min = [ X Y -> if X < Y then X else Y ]
-def max = [ X Y -> if X < Y then Y else X ]
-
 def input = let L = read_line stdin in if eof stdin then nil else cons L input
 val pixel = Regex::compile "[.#]+"
 def parse_line = [{P} -> P | _ -> none ] . map unpack  . Regex::matches pixel
 def enhancement = [L -> (dict_from_list . Gen::to_list) (Gen::zip (Gen::from 0) (Gen::from_list L)) ]
 def image  = dict_from_list . flatten . Gen::to_lists . Gen::zip_2d Gen::space . Gen::from_lists
 def parse_input = [LL -> (enhancement (head LL), ('.', image ((tail) LL))) ]
-
 
 def begin = [CC -> foldl [(X0,Y0) (X1,Y1) -> (min X0 X1, min Y0 Y1)] (max_int,max_int) CC]
 def end   = [CC -> foldl [(X0,Y0) (X1,Y1) -> (max X0 X1, max Y0 Y1)] (0,0) CC]
