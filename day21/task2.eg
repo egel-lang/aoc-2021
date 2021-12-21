@@ -1,0 +1,46 @@
+# Advent of Code (AoC) - day 21, task 2
+
+import "prelude.eg" import "os.ego" import "regex.ego" import "generator.eg" import "dictionary.eg"
+using System using OS using List using Dict
+
+def range2 = 
+    [ XG YG F -> Gen::flatten (Gen::range XG [X -> Gen::range YG [Y -> F X Y]]) ]
+def range3 = 
+    [ XG YG ZG F -> Gen::flatten (Gen::range XG [X -> range2 YG ZG [Y Z  -> F X Y Z]]) ]
+def triples =
+    [XX YY ZZ -> (Gen::to_list) (range3 (Gen::from_list XX) (Gen::from_list YY) (Gen::from_list ZZ) tuple)]
+
+data player
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
+val number = Regex::compile "[0-9]+"
+def parse_line = [{P,N} -> player (to_int P) (to_int N) 0 ] . Regex::matches number
+
+val memo = dict
+def memo_has = [K   -> Dict::has memo K]
+def memo_set = [K V -> Dict::set memo K V]
+def memo_get = [K   -> Dict::get memo K]
+
+val die = triples {1,2,3} {1,2,3} {1,2,3}
+def mod10 = [N -> ((N - 1) % 10) + 1]
+
+def add2 = [(X0,Y0) (X1,Y1) -> (X0+X1,Y0+Y1)]
+
+def play = 
+    [ (player N0 P0 S0, player N1 P1 S1) ->
+        if memo_has (P0,S0,P1,S1) then memo_get (P0,S0,P1,S1)
+        else
+        let WW = map
+            [ (D0,D1,D2) ->
+                let P2 = mod10 (P0 + D0 + D1 + D2) in
+                let S2 = S0 + P2 in
+                if S2 < 21 then 
+                    let (WIN0,WIN1) = play (player N1 P1 S1, player N0 P2 S2)
+                    in (WIN1,WIN0)
+                else (1,0) ] die in 
+        let (WIN0,WIN1) = foldl add2 (0,0) WW in 
+            memo_set (P0,S0,P1,S1) (WIN0,WIN1);
+            (WIN0,WIN1) ]
+
+def main = 
+    let PP = ([{P0,P1} -> (P0,P1)] . map parse_line) input in
+        ([ (WIN0, WIN1) -> max WIN0 WIN1 ] . play) PP

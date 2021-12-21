@@ -1,0 +1,33 @@
+# Advent of Code (AoC) - day 21, task 1
+
+import "prelude.eg" import "os.ego" import "regex.ego" import "generator.eg" import "dictionary.eg"
+using System using OS using List using Dict
+
+data player
+
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
+val number = Regex::compile "[0-9]+"
+def parse_line = [{P,N} -> player (to_int P) (to_int N) 0 ] . Regex::matches number
+
+val die = ref 0
+def roll = [ _ -> let N = get_ref die in set_ref die (N+1); N+1 ]
+def get_die = [ _ -> get_ref die ]
+
+def play = 
+    [ {(player N P S)|PP} ->
+        print "player " N " pos " P " score " S "\n";
+        let R0 = roll none in
+        let R1 = roll none in
+        let R2 = roll none in
+        let M0 = R0 + R1 + R2 in
+        let P0 = (((M0 + P) - 1) % 10) + 1 in
+        let S0 = S + P0 in
+            if S0 < 1000 then
+            (play . reverse) {(player N P0 S0)|PP}
+        else {(player N P0 S0)|PP} ]
+
+
+def main = 
+    let PP = map parse_line input in
+        ([(player N P S) -> S * get_die none ] . head . tail . play) PP
+
