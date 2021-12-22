@@ -12,25 +12,18 @@ def parse_line = [ L ->
     let O = ([{O} -> O] . Regex::matches onoroff) L in (O, C) ]
 
 def s_overlap = [ (s X0 X1) (s Y0 Y1) -> max X0 Y0 < min X1 Y1 ]
-def s_truncate = 
-    [ (s X0 X1) (s Y0 Y1) -> [(s X0 X1) -> if X1 <= X0 then none else (s X0 X1)]
-        (s (max X0 Y0) (min X1 Y1)) ]
 def s_length = [ (s X0 X1) -> X1 - X0 ]
 def s_split = [(s X0 Y0) (s X1 Y1) ->
     let XX = nub (sort {X0,Y0,X1,Y1}) in map [(X,Y) -> s X Y] (zip XX (tail XX)) ]
 
 def cube_maybe = [ none _ _ -> none | _ none _ -> none | _ _ none -> none | X Y Z -> cube X Y Z ]
 def cube_volume = [ (cube S0 S1 S2) -> s_length S0 * s_length S1 * s_length S2 ]
-def cube_truncate = 
-    [ (cube S0 S1 S2) (cube S3 S4 S5) ->
-         cube_maybe  (s_truncate S0 S3) (s_truncate S1 S4) (s_truncate S2 S5) ]
 def cube_overlap = 
     [(cube S0 S1 S2) (cube S3 S4 S5) ->
         s_overlap S0 S3 && [_ -> s_overlap S1 S4 && [_ -> s_overlap S2 S5]] ]
 def cube_split = 
     [(cube S0 S1 S2) (cube S3 S4 S5) ->
         range3 (s_split S0 S3) (s_split S1 S4) (s_split S2 S5) [S0 S1 S2 -> cube S0 S1 S2] ]
-
 def cube_subs =
     [ C0 C1 -> if not (cube_overlap C0 C1) then {C1} else
         filter [C2 -> not (cube_overlap C0 C2) && [_ -> cube_overlap C1 C2 ]] (cube_split C0 C1) ]
@@ -42,5 +35,3 @@ def solve =
         
 def main = 
     let PP = map parse_line input in solve PP
-
-
