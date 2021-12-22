@@ -1,0 +1,44 @@
+# Advent of Code (AoC) - day 21, task 1
+import "prelude.eg" import "os.ego" import "regex.ego" import "generator.eg" import "dictionary.eg"
+using System using OS using List using Dict
+
+data seg, cube
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
+val number = Regex::compile "-?[0-9]+"
+val onoroff = Regex::compile "on|off"
+def parse_line = 
+    [ L ->
+    let C = ([{X0,X1,Y0,Y1,Z0,Z1} -> cube (seg X0 (X1+1)) (seg Y0 (Y1+1)) (seg Z0 (Z1+1))] . map to_int . Regex::matches number) L in
+    let O = ([{O} -> O] . Regex::matches onoroff) L in (O, C) ]
+
+def seg_overlap = [ (seg X0 X1) (seg Y0 Y1) -> max X0 Y0 < min X1 Y1 ]
+def seg_truncate = 
+    [ (seg X0 X1) (seg Y0 Y1) -> [(seg X0 X1) -> if X1 <= X0 then none else (seg X0 X1)]
+        (seg (max X0 Y0) (min X1 Y1)) ]
+def seg_length = [ (seg X0 X1) -> X1 - X0 ]
+def seg_split = [(seg X0 Y0) (seg X1 Y1) ->
+    let XX = nub (sort {X0,Y0,X1,Y1}) in map [(X,Y) -> seg X Y] (zip XX (tail XX)) ]
+
+def cube_maybe = [ none _ _ -> none | _ none _ -> none | _ _ none -> none | X Y Z -> cube X Y Z ]
+def cube_volume = [ (cube S0 S1 S2) -> seg_length S0 * seg_length S1 * seg_length S2 ]
+def cube_truncate = [ (cube S0 S1 S2) (cube S3 S4 S5) -> cube_maybe  (seg_truncate S0 S3) (seg_truncate S1 S4) (seg_truncate S2 S5) ]
+def cube_overlap = [(cube S0 S1 S2) (cube S3 S4 S5) -> seg_overlap S0 S3 && [_ -> seg_overlap S1 S4 && [_ -> seg_overlap S2 S5]] ]
+def cube_split = [(cube S0 S1 S2) (cube S3 S4 S5) ->
+    range3 (seg_split S0 S3) (seg_split S1 S4) (seg_split S2 S5) [S0 S1 S2 -> cube S0 S1 S2] ]
+
+val cube_small = let S = seg (0 - 50) 51 in cube S S S
+def cubes_restrict = filter [(O,none) -> false | _ -> true] . map [(O,C) -> (O, cube_truncate C cube_small)]
+
+def subscubes =
+    [ C0 C1 ->
+        if not (cube_overlap C0 C1) then {C1} else
+        filter [C2 -> not (cube_overlap C0 C2) && [_ -> cube_overlap C1 C2 ]] (cube_split C0 C1) ]
+
+def solve = 
+    [ {} -> 0
+    | {("off", C)|CC} -> solve CC
+    | {("on",  C)|CC} -> let CC1 = foldl [CC C -> flatten  (map (subscubes C) CC)] {C} (map snd CC) in 
+        (sum (map cube_volume CC1)) + solve CC ]
+        
+def main = 
+    let PP = map parse_line input in (solve . cubes_restrict) PP
