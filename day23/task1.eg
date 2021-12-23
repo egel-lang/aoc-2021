@@ -81,9 +81,6 @@ def invalid_source =
 
 def valid_move =
     [ B AP0 AP1 ->
-        #print (blocked B AP0 AP1) " <- blocked \n";
-        #print (invalid_destination B AP0 AP1) " <- no dest\n";
-        #print (invalid_source B AP0 AP1) " <- no src\n";
              not (blocked B AP0 AP1 
                         || [_-> invalid_destination B AP0 AP1 
                         || [_-> invalid_source B AP0 AP1]]) ]
@@ -104,21 +101,36 @@ def board_next = [ B ->
         BB ]
 
 def board_end = all [((_,Y0),(_,_,Y1)) -> Y0 == Y1 ]
+
+# counter
+val count = ref 0
+def counter = [ _ -> 
+        let N = get_ref count in
+        set_ref count (N+1); N ]
+
+val visited = Dict::dict
+def visited_has = [ B -> Dict::has visited B ]
+def visited_add = [ B -> Dict::set visited B true ]
+def visited_del = [ B -> Dict::erase visited B ]
+
 # search
 def find_run = 
     [ T PQ -> 
         if pqueue_empty PQ then throw "search exhausted" else 
         let (T, B) = pqueue_top PQ in
         pqueue_pop PQ;
-        print "-> " T "\n";
+        if visited_has B then find_run T PQ else
+        visited_add B;
+        #print " => " (counter none) "\n";
+        print " -> " T "\n";
         if board_end B then T else
-        debug B;
+        #debug B;
         let BB = board_next B in
-        let PQ = foldl [PQ (C,B) -> pqueue_push PQ (T+C) B ] PQ BB in 
+        let PQ = foldl [PQ (C,B) -> pqueue_push PQ (T+C) (sort B) ] PQ BB in 
             find_run T PQ ]
 
 def find =
-    [ B -> find_run 0 (pqueue_push pqueue 0 B) ]
+    [ B -> find_run 0 (pqueue_push pqueue 0 (sort B)) ]
 
 def debug =
     [ B ->
