@@ -60,10 +60,14 @@ def blocked =
 
 def invalid_destination =
     [ B ((1,_),_) ((1,_),_) -> true
-    | B ((1,F),_) ((_,Y0),(_,_,Y1)) ->
+    | B ((1,F),_) ((X0,Y0),(_,_,Y1)) ->
         if Y0 == Y1 then
             let B = filter [((_,Y),_) -> Y == Y0] B in
-                any [((_,Y0),(_,_,Y1)) -> not (Y0 == Y1)] B 
+            (any [((_,Y0),(_,_,Y1)) -> not (Y0 == Y1)] B) 
+            ||
+            [_ -> let XX = map [((X,_),_) -> X] B in
+                  #print XX;
+                  not (X0 == (minimum {4|XX} - 1)) ]
         else true
     | B _ _ -> false ]
 
@@ -106,10 +110,9 @@ def find_run =
         if pqueue_empty PQ then throw "search exhausted" else 
         let (T, B) = pqueue_top PQ in
         pqueue_pop PQ;
+        print "-> " T "\n";
         if board_end B then T else
-        print " -> " T "\n";
         debug B;
-        print "\n";
         let BB = board_next B in
         let PQ = foldl [PQ (C,B) -> pqueue_push PQ (T+C) B ] PQ BB in 
             find_run T PQ ]
@@ -119,11 +122,11 @@ def find =
 
 def debug =
     [ B ->
-        let SP = (flatten . Gen::to_lists) (Gen::take_2d 7 15 Gen::space) in
+        let SP = (flatten . Gen::to_lists) (Gen::take_2d 5 13 Gen::space) in
         let SP = map [C -> (C, '.')] SP in
         let B = map [(C,(A,_,_)) -> (C,A)] B in
         let D = Dict::from_list (SP ++ B) in
-            print_board D ]
+            print_board D; print "\n" ]
 
 # wrap it up
 def main =
