@@ -34,8 +34,6 @@ def extract  =
         (op_mul 'y' 'x'), (op_add 'z' 'y') | II } -> {(A,B,C)| extract II}
     | _ -> {} ]
 
-val p = ref 99999999999999
-val q = ref 11111111111111
 def ref_add = [ R N -> set_ref R ((get_ref R) + N) ]
 def ref_sub = [ R N -> set_ref R ((get_ref R) - N) ]
 
@@ -45,13 +43,15 @@ def pop  = [ _ -> let S = get_ref stack in set_ref stack (tail S); head S ]
 
 def solve =
     [ ABC ->
+        let P = ref 99999999999999 in
+        let Q = ref 11111111111111 in
         range (from_to 0 13) [ I ->
             let (_,A,B) = nth I ABC in
             if 0 < A then push (I, B) else 
             let (J,B) = pop none in 
-                ref_sub p (abs ((A+B)*(10** if (0-B) < A then 13 - J else 13 - I)));
-                ref_add q (abs ((A+B)*(10** if A < (0 - B) then 13 - J else 13 - I)))
-        ]; (get_ref p, get_ref q) 
+                ref_sub P (abs ((A+B)*(10** if (0-B) < A then 13 - J else 13 - I)));
+                ref_add Q (abs ((A+B)*(10** if A < (0 - B) then 13 - J else 13 - I)))
+        ]; (get_ref P, get_ref Q) 
     ]
 
 def main = 
