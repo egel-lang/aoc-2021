@@ -1,0 +1,77 @@
+# Advent of Code (AoC) - day 24, task 1 and 2
+import "prelude.eg" import "os.ego" import "regex.ego" import "search.eg" import "dictionary.eg"
+using System using OS using List using Search
+
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
+val word  = Regex::compile "(-?[0-9]+|[a-z])+"
+def lexify = Regex::matches word
+
+data op_inp, op_add, op_mul, op_div, op_mod, op_eql, reg
+
+val number   = Regex::compile "-?[0-9]+"
+val register = Regex::compile "[w-z]"
+def look    = [ {} -> fail {} | {B|BB} -> success B BB ]
+def satisfy = [ S0 -> look <*> \S1 -> if S0 == S1 then success S0 else fail ]
+def to_reg = [ S -> [{C} -> C] (unpack S) ] 
+def is_number = look <*> \S -> if Regex::match number S then success (to_int S) else fail
+def is_register = look <*> \R -> if Regex::match register R then success (to_reg R) else fail
+def is_operand = is_number <+> is_register
+
+def parse_instruction = 
+    (satisfy "inp" <*> \_ -> is_register <@> \R -> op_inp R) <+>
+    (satisfy "add" <*> \_ -> is_operand <*> \O0 -> is_operand <@> \O1 -> op_add O0 O1) <+>
+    (satisfy "mul" <*> \_ -> is_operand <*> \O0 -> is_operand <@> \O1 -> op_mul O0 O1) <+>
+    (satisfy "div" <*> \_ -> is_operand <*> \O0 -> is_operand <@> \O1 -> op_div O0 O1) <+>
+    (satisfy "mod" <*> \_ -> is_operand <*> \O0 -> is_operand <@> \O1 -> op_mod O0 O1) <+>
+    (satisfy "eql" <*> \_ -> is_operand <*> \O0 -> is_operand <@> \O1 -> op_eql O0 O1)
+def parse = [ L -> (search (star parse_instruction) L [X CC -> X] [X CC -> throw X] [X CC -> throw X]) ]
+
+def extract  = 
+    [ { (op_inp 'w'), (op_mul 'x' 0), (op_add 'x' 'z'), (op_mod 'x' 26),
+        (op_div 'z' A), (op_add 'x' B), (op_eql 'x' 'w'), (op_eql 'x' 0),
+        (op_mul 'y' 0), (op_add 'y' 25), (op_mul 'y' 'x'), (op_add 'y' 1),
+        (op_mul 'z' 'y'), (op_mul 'y' 0), (op_add 'y' 'w'), (op_add 'y' C),
+        (op_mul 'y' 'x'), (op_add 'z' 'y') | II } -> {(A,B,C)| extract II}
+    | _ -> {} ]
+
+def ref_add = [ R N -> set_ref R ((get_ref R) + N) ]
+def ref_sub = [ R N -> set_ref R ((get_ref R) - N) ]
+def push = [ S V -> set_ref S {V|get_ref S} ]
+def pop  = [ S -> let SS = get_ref S in set_ref S (tail SS); head SS ]
+
+def solve =
+    [ ABC ->
+        let P = ref 99999999999999 in
+        let Q = ref 11111111111111 in
+        let S = ref {} in
+        range (from_to 0 13) [ I ->
+            let (_,A,B) = nth I ABC in
+            if 0 < A then push S (I, B) else 
+            let (J,B) = pop S in 
+                ref_sub P (abs ((A+B)*(10** if (0-B) < A then 13 - J else 13 - I)));
+                ref_add Q (abs ((A+B)*(10** if A < (0 - B) then 13 - J else 13 - I)))
+        ]; (get_ref P, get_ref Q) 
+    ]
+
+def main = 
+    let TT = (flatten . map lexify)  input in (solve . extract . parse) TT
+
+def stolen_from = """
+# by 4HbQ @ Reddit
+instr, stack = [*open(0)], []
+
+p, q = 99999999999999, 11111111111111
+
+for i in range(14):
+    a = int(instr[18*i+5].split()[-1])
+    b = int(instr[18*i+15].split()[-1])
+
+    if a > 0: stack+=[(i, b)]; continue
+    j, b = stack.pop()
+
+    p -= abs((a+b)*10**(13-[i,j][a>-b]))
+    q += abs((a+b)*10**(13-[i,j][a<-b]))
+
+print(p, q)
+"""
+
