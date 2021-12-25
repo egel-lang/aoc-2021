@@ -1,0 +1,60 @@
+# Advent of Code (AoC) - day 25
+
+import "prelude.eg" import "os.ego" import "regex.ego" import "generator.eg" import "dictionary.eg"
+using System using OS using List
+
+def loop = [ {} F -> {} | {X|XG} F -> let Y = F X in loop (XG none) F ]
+def keys_gen = Gen::from_list . Dict::keys # fake it for now
+
+def print_board = [ B -> let KK = (Dict::keys B) in
+        foldl [(X0,Y0) (X1,Y1) -> (if not (X0 == X1) then print "\n" else none);
+               print (Dict::get B (X1, Y1)); (X1,Y1) ] (head KK) KK; none ]
+
+def input = let L = read_line stdin in if eof stdin then nil else cons L input
+val line = Regex::compile "[.>v]+"
+def seafloor =  map (unpack . [{X}->X] . Regex::matches line)
+def to_board = Gen::to_lists . Gen::zip_2d Gen::space . Gen::from_lists
+def stencil = Dict::from_list . List::flatten
+
+
+def begin = [CC -> foldl [(X0,Y0) (X1,Y1) -> (min X0 X1, min Y0 Y1)] (max_int,max_int) CC]
+def end   = [CC -> foldl [(X0,Y0) (X1,Y1) -> (max X0 X1, max Y0 Y1)] (0,0) (Dict::keys CC)]
+
+def step_east = 
+    [ B -> let (MAXX, MAXY) = end B in
+           let B0 = Dict::dict in
+           loop (keys_gen B) [(X,Y) ->
+                let XYL = (X, (MAXY + Y) % (MAXY + 1)) in
+                let XYR = (X, (Y+1) % (MAXY + 1)) in
+                let {CL,C,CR} = map (Dict::get B) {XYL,(X,Y),XYR} in
+                if (C == '.') && [_ -> CL == '>'] then
+                    Dict::set B0 (X,Y) '>'
+                else if (C == '>') && [_ -> CR == '.'] then
+                    Dict::set B0 (X,Y) '.'
+                else Dict::set B0 (X,Y) (Dict::get B (X,Y))
+            ];
+            B0
+    ]
+
+def step_south = 
+    [ B -> let (MAXX, MAXY) = end B in
+           let B0 = Dict::dict in
+           loop (keys_gen B) [(X,Y) ->
+                let XYU = ((MAXX + X) % (MAXX + 1), Y) in
+                let XYD = ((X+1) % (MAXX + 1), Y) in
+                let {CU,C,CD} = map (Dict::get B) {XYU,(X,Y),XYD} in
+                if (C == '.') && [_ -> CU == 'v'] then
+                    Dict::set B0 (X,Y) 'v'
+                else if (C == 'v') && [_ -> CD == '.'] then
+                    Dict::set B0 (X,Y) '.'
+                else Dict::set B0 (X,Y) (Dict::get B (X,Y))
+            ];
+            B0
+    ]
+
+def run = [ N B0  -> print N "\n"; let B1 = (step_south . step_east) B0 in if Dict::to_list B0 == Dict::to_list B1 then N else run (N+1) B1 ]
+
+def main = let B = (stencil . to_board . seafloor) input in 
+    run 1 B
+    
+
