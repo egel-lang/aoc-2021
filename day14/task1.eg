@@ -19,16 +19,16 @@ def parse_line = [ L -> let {A,B} = Regex::group insert L in
                         (([{A,B} -> (A,B)] . unpack) A, (head . unpack) B)]
 def parse = [ LL -> ((unpack.head) LL, (map parse_line.tail.tail) LL) ]
 
-def expansions = dict_from_list
+def expansions = Dict::from_list
 
 def expand = 
     [ F {} -> {} | F {A} -> {A} 
     | F {A,B|CC} -> 
-        if dict_has F (A,B) then {A, dict_get F (A,B)} ++ (expand F {B|CC})
+        if Dict::has F (A,B) then {A, Dict::get F (A,B)} ++ (expand F {B|CC})
         else {A|expand F {B|CC}} ]
 
 def elements =
-   dict_keys . dict_from_list . map [X -> (X,0)] . flatten . map [((A,B),C) -> {A,B,C}]
+   Dict::keys . Dict::from_list . map [X -> (X,0)] . flatten . map [((A,B),C) -> {A,B,C}]
     
 def count =
     [ EL T -> map [E -> length (filter [E0 -> E0 == E] T)] EL ]

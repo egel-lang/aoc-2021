@@ -11,7 +11,7 @@ using List
 
 def min = foldl [X Y -> if X < Y then X else Y] 10000000000000
 def max = foldl [X Y -> if X < Y then Y else X] 0
-def dict_add  = [ D K N -> dict_set D K (dict_nth 0 D K + N) ]
+def Dict::add  = [ D K N -> Dict::set D K (Dict::nth 0 D K + N) ]
 
 def input = let L = read_line stdin in if eof stdin then nil else cons L input
 
@@ -21,10 +21,10 @@ def parse_line = [ L -> let {A,B} = Regex::group insert L in
                         (([{A,B} -> (A,B)] . unpack) A, (head . unpack) B)]
 def parse = [ LL -> ((unpack.head) LL, (map parse_line.tail.tail) LL) ]
 
-def bucket_empty = dict
-def buckets      = dict_keys 
-def bucket_nth   = dict_nth 0
-def bucket_add   = dict_add
+def bucket_empty = Dict::dict
+def buckets      = Dict::keys 
+def bucket_nth   = Dict::nth 0
+def bucket_add   = Dict::add
 
 def template_to_bucket =
     [ BB {} -> BB | BB {A} -> BB 
@@ -33,25 +33,25 @@ def template_to_bucket =
 def expand = 
     [ F FROM -> 
         foldl [TO (A,B) ->
-        if dict_has F (A,B) then 
-            let C = dict_get F (A,B) in let N = bucket_nth FROM (A,B) in
+        if Dict::has F (A,B) then 
+            let C = Dict::get F (A,B) in let N = bucket_nth FROM (A,B) in
             bucket_add TO (A,C) N; bucket_add TO (C,B) N; TO
         else bucket_add TO (A,B) (bucket_nth FROM (A,B)) ]
         bucket_empty (buckets FROM) ]
 
 def elements =
-    dict_keys . dict_from_list . map [X -> (X,0)] . flatten . map [((A,B),C) -> {A,B,C}]
+    Dict::keys . Dict::from_list . map [X -> (X,0)] . flatten . map [((A,B),C) -> {A,B,C}]
     
 def template_length =
-    ((+) 1 . (foldl [N (P,M) -> N+M] 0) . dict_to_list)
+    ((+) 1 . (foldl [N (P,M) -> N+M] 0) . Dict::to_list)
 
 def count_dict =
-    [ BB -> foldl [D ((A,B),N) -> dict_add D B N; D] dict (dict_to_list BB) ]
+    [ BB -> foldl [D ((A,B),N) -> Dict::add D B N; D] Dict::dict (Dict::to_list BB) ]
 
 def main =
     let (T,EE) = parse input in 
     let EL = elements EE in
     let BB = template_to_bucket bucket_empty T in
-    let BB = iter 40 (expand (dict_from_list EE)) BB in
-    let NN = (map [(_,N) -> N] . dict_to_list . [D -> dict_add D (head T) 1] . count_dict) BB in
+    let BB = iter 40 (expand (Dict::from_list EE)) BB in
+    let NN = (map [(_,N) -> N] . Dict::to_list . [D -> Dict::add D (head T) 1] . count_dict) BB in
         (max NN) - (min NN)
