@@ -9,8 +9,6 @@ using System
 using OS
 using List
 
-def min = [ X Y -> if X < Y then X else Y ]
-
 def input =
     let L = read_line stdin in
     if eof stdin then nil else cons L input
@@ -22,34 +20,34 @@ def parse_line = map to_int . Regex::matches digit
 def coordinate_pairs =
     snd .
     foldl [((X,Y),LL) -> foldl [((X,Y),L) Z -> ((X,Y+1),{((X,Y),Z)|L})] ((X+1,0),LL)] 
-          ((-1,0),nil) 
+          ((0 - 1,0),nil) 
 
 def stencil =
-    foldl [D (K,V) -> dict_set D K V] dict
+    foldl [D (K,V) -> Dict::set D K V] Dict::dict
 
 def adjacent =
-    [ F (X,Y) -> filter (dict_has F) {(X - 1,Y),(X + 1,Y),(X,Y - 1), (X,Y + 1)} ]
+    [ F (X,Y) -> filter (Dict::has F) {(X - 1,Y),(X + 1,Y),(X,Y - 1), (X,Y + 1)} ]
 
 def is_low =
-    [ F (X,Y) -> (dict_get F) (X,Y) < (foldl min 10 . map (dict_get F) . adjacent F) (X,Y) ]
-
-def minima =
-    [ F -> filter (is_low F) (dict_keys F)]
+    [ F (X,Y) -> (Dict::get F) (X,Y) < (foldl min 10 . map (Dict::get F) . adjacent F) (X,Y) ]
 
 def visited =
-    [ D -> foldl [D K -> dict_set D K false] dict (dict_keys D) ]
+    [ D -> foldl [D K -> Dict::set D K false] Dict::dict (Dict::keys D) ]
 
 def flood =
     [ F V nil -> V
     | F V {(X,Y)|XX} ->
-        if (dict_get V (X,Y)) || [_ -> dict_get F (X,Y) == 9] then flood F V XX else
-        dict_set V (X,Y) true;
-        let MIN = (foldl min 10 . map (dict_get F)) {(X,Y)| adjacent F (X,Y)} in
-        dict_set F (X,Y) MIN;
+        if (Dict::get V (X,Y)) || [_ -> Dict::get F (X,Y) == 9] then flood F V XX else
+        Dict::set V (X,Y) true;
+        let MIN = (foldl min 10 . map (Dict::get F)) {(X,Y)| adjacent F (X,Y)} in
+        Dict::set F (X,Y) MIN;
         flood F V (adjacent F (X,Y) ++ XX) ]
         
+def minima =
+    [ F -> filter (is_low F) (Dict::keys F)]
+
 def basin_size =
-    [ B -> foldl [N P -> if dict_get B P then N+1 else N] 0 (dict_keys B) ]
+    [ B -> foldl [N P -> if Dict::get B P then N+1 else N] 0 (Dict::keys B) ]
 
 def main =
     let LL = map parse_line input in 
