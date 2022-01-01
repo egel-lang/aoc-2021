@@ -17,19 +17,19 @@ def parse_line = map to_int . Regex::matches digit
 def to_board =
    Gen::to_lists . Gen::zip_2d Gen::space . Gen::from_lists
 
-def stencil = dict_from_list . List::flatten
+def stencil = Dict::from_list . List::flatten
 
 def print_board = 
-    [ B -> let KK = dict_keys B in 
+    [ B -> let KK = Dict::keys B in 
         foldl [(X0,Y0) (X1,Y1) -> (if not (X0 == X1) then print "\n" else none);
-               print (dict_get B (X1, Y1)); (X1,Y1) ] (head KK) KK; none ]
+               print (Dict::get B (X1, Y1)); (X1,Y1) ] (head KK) KK; none ]
 
 val update_stencil =
     (stencil . List::map (List::map [((X,Y),V) -> ((X - 1, Y - 1), V)]) . to_board)
-    {{1, 1, 1}, {1, -100, 1}, {1, 1, 1}}
+    {{1, 1, 1}, {1, 0- 100, 1}, {1, 1, 1}}
 
 def increase_octopodes =
-    [ F -> foldl [F (X,Y) -> dict_set F (X,Y) (dict_get F (X,Y) + 1)] F (dict_keys F) ]
+    [ F -> foldl [F (X,Y) -> Dict::set F (X,Y) (Dict::get F (X,Y) + 1)] F (Dict::keys F) ]
 
 val flash_counter = ref 0
 def flash_get     = get_ref flash_counter
@@ -42,18 +42,18 @@ def apply_mask =
         foldl
         [ U (X1,Y1) -> 
             let (X2, Y2) = (X0+X1, Y0+Y1) in
-            if dict_has F (X2,Y2) then dict_set F (X2, Y2) ((dict_get F (X2, Y2)) + (dict_get update_stencil (X1,Y1))) else F ]
+            if Dict::has F (X2,Y2) then Dict::set F (X2, Y2) ((Dict::get F (X2, Y2)) + (Dict::get update_stencil (X1,Y1))) else F ]
         F
-        (dict_keys update_stencil) ]
+        (Dict::keys update_stencil) ]
  
 def find_flash =
-    [ F -> foldl [O0 O1 -> if 10 <= (dict_get F O1) then O1 else O0] none (dict_keys F) ]
+    [ F -> foldl [O0 O1 -> if 10 <= (Dict::get F O1) then O1 else O0] none (Dict::keys F) ]
 
 def flash_octopodes =
     [ F -> [ none -> F | O -> flash_octopus F O; flash_octopodes F ] (find_flash F) ] 
 
 def unflash_octopodes =
-    [ F -> foldl [F O -> if dict_get F O < 0 then dict_set F O 0 else F ] F (dict_keys F) ]
+    [ F -> foldl [F O -> if Dict::get F O < 0 then Dict::set F O 0 else F ] F (Dict::keys F) ]
 
 def debug =
     [ F ->
