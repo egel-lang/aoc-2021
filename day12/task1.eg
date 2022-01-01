@@ -28,22 +28,22 @@ def reverse_edge = map [(X,Y) -> (Y,X)]
 def edges = [EE -> EE ++ (reverse_edge EE)]
 
 def graph_add_edge =
-    [ D (E0,E1) -> if dict_has D E0 then dict_set D E0 {E1| dict_get D E0} else dict_set D E0 {E1} ]
+    [ D (E0,E1) -> if Dict::has D E0 then Dict::set D E0 {E1| Dict::get D E0} else Dict::set D E0 {E1} ]
 
-def to_graph = [ EE -> foldl [G E -> graph_add_edge G E] dict (edges EE) ]
+def to_graph = [ EE -> foldl [G E -> graph_add_edge G E] Dict::dict (edges EE) ]
 
-def to_visited = dict_from_list . map [(X, Y) -> (X, false)] . edges
+def to_visited = Dict::from_list . map [(X, Y) -> (X, false)] . edges
 
-def set_visited = dict_set
+def set_visited = Dict::set
 
-def get_visited = [D V -> [(small V, B) -> B | (_,B) -> false] (V, dict_get D V) ]
+def get_visited = [D V -> [(small V, B) -> B | (_,B) -> false] (V, Dict::get D V) ]
 
 def find =
     [ V0 V1 G VV -> # print "find from " V0 " to " V1 "\n";
                     if get_visited VV V0 then none else
                     set_visited VV V0 true; 
                     if V0 == V1 then set_visited VV V0 false; {{V0}} else 
-                    let PP = map [V -> find V V1 G VV] (dict_get G V0) in
+                    let PP = map [V -> find V V1 G VV] (Dict::get G V0) in
                     set_visited VV V0 false;
                     foldl [PP none -> PP | PP P -> map [P -> {V0|P}] P ++ PP] nil PP ]
 def paths =

@@ -25,23 +25,23 @@ def parse_line =
 def edges = [EE -> EE ++ (map [(X,Y) -> (Y,X)] EE)]
 
 def graph_add_edge =
-    [ D (E0,E1) -> if dict_has D E0 then dict_set D E0 {E1| dict_get D E0} else dict_set D E0 {E1} ]
+    [ D (E0,E1) -> if Dict::has D E0 then Dict::set D E0 {E1| Dict::get D E0} else Dict::set D E0 {E1} ]
 
-def to_graph = [ EE -> foldl [G E -> graph_add_edge G E] dict (edges EE) ]
+def to_graph = [ EE -> foldl [G E -> graph_add_edge G E] Dict::dict (edges EE) ]
 
-def to_visited = dict_from_list . map [(X, Y) -> (X, 0)] . edges
-def inc_visited = [D V -> dict_set D V ((dict_get D V) + 1) ]
-def dec_visited = [D V -> dict_set D V ((dict_get D V) - 1) ]
+def to_visited = Dict::from_list . map [(X, Y) -> (X, 0)] . edges
+def inc_visited = [D V -> Dict::set D V ((Dict::get D V) + 1) ]
+def dec_visited = [D V -> Dict::set D V ((Dict::get D V) - 1) ]
 def may_visit = [D V -> 
         [ (small "start", 1) -> false | (small "end", 1) -> false | (small V, 0) -> true 
-        | (small V, 1) -> all [(small _, N) -> N <=1 | _ -> true ] (dict_to_list D) 
-        | (small V, 2) -> false | (_, N) -> true ] (V, dict_get D V) ]
+        | (small V, 1) -> all [(small _, N) -> N <=1 | _ -> true ] (Dict::to_list D) 
+        | (small V, 2) -> false | (_, N) -> true ] (V, Dict::get D V) ]
 
 def find =
     [ V0 V1 G VV -> if not (may_visit VV V0) then none else
                     inc_visited VV V0; 
                     if V0 == V1 then dec_visited VV V0; {{V0}} else 
-                    let PP = map [V -> find V V1 G VV] (dict_get G V0) in
+                    let PP = map [V -> find V V1 G VV] (Dict::get G V0) in
                     dec_visited VV V0;
                     foldl [PP none -> PP | PP P -> map [P -> {V0|P}] P ++ PP] nil PP ]
 
