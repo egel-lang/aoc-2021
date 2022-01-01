@@ -15,20 +15,20 @@ using List
 def max = [ X Y -> if X < Y then Y else X ]
 
 def print_board = 
-    [ B -> let KK = dict_keys B in 
+    [ B -> let KK = Dict::keys B in 
         foldl [(X0,Y0) (X1,Y1) -> (if not (X0 == X1) then print "\n" else none);
-               print (dict_get B (X1, Y1)); (X1,Y1) ] (head KK) KK; print "\n" ]
+               print (Dict::get B (X1, Y1)); (X1,Y1) ] (head KK) KK; print "\n" ]
 
 def input = let L = read_line stdin in if eof stdin then nil else cons L input
 val digit = Regex::compile "[0-9]"
 def parse_line = map to_int . Regex::matches digit   
 
-def risk    = dict_from_list . flatten . Gen::to_lists . Gen::zip_2d Gen::space . Gen::from_lists
-def totals  = dict_map [_ -> 0] . dict_copy
-def visited = dict_map [_ -> false] . dict_copy
+def risk    = Dict::from_list . flatten . Gen::to_lists . Gen::zip_2d Gen::space . Gen::from_lists
+def totals  = Dict::map [_ -> 0] . Dict::copy
+def visited = Dict::map [_ -> false] . Dict::copy
 
-def adjacent = [D (X,Y) -> filter (dict_has D) {(X - 1,Y),(X + 1,Y),(X,Y - 1), (X, Y + 1)}] 
-def end = [D -> foldl [(X0,Y0) (X1,Y1) -> (max X0 X1, max Y0 Y1)] (0,0) (dict_keys D)]
+def adjacent = [D (X,Y) -> filter (Dict::has D) {(X - 1,Y),(X + 1,Y),(X,Y - 1), (X, Y + 1)}] 
+def end = [D -> foldl [(X0,Y0) (X1,Y1) -> (max X0 X1, max Y0 Y1)] (0,0) (Dict::keys D)]
 
 def dijkstra_run = 
     [ R T V PQ -> 
@@ -36,19 +36,19 @@ def dijkstra_run =
         let (RISK, P) = pqueue_top PQ in
         pqueue_pop PQ;
         print RISK " " P "\n"; 
-        dict_set V P true;
-        let ADJ = filter [P -> not (dict_get V P)] (adjacent R P) in
-        let PP = map [P -> (RISK + dict_get R P, P)] ADJ in
-        let V  = foldl [V (RISK,P) -> dict_set V P true ] V PP in
+        Dict::set V P true;
+        let ADJ = filter [P -> not (Dict::get V P)] (adjacent R P) in
+        let PP = map [P -> (RISK + Dict::get R P, P)] ADJ in
+        let V  = foldl [V (RISK,P) -> Dict::set V P true ] V PP in
         let PQ = foldl [PQ (RISK,P) -> pqueue_push PQ RISK P ] PQ PP in 
-        foldl [T (RISK,P) -> dict_set T P RISK ] T PP;
+        foldl [T (RISK,P) -> Dict::set T P RISK ] T PP;
             dijkstra_run R T V PQ ]
 
 def dijkstra =
-    [ R -> dijkstra_run R (totals R) (dict_set (visited R) (0,0) true) (pqueue_push pqueue 0 (0,0)) ]
+    [ R -> dijkstra_run R (totals R) (Dict::set (visited R) (0,0) true) (pqueue_push pqueue 0 (0,0)) ]
 
 def main =
     let R = (risk . map parse_line) input in
     let T = dijkstra R in
-        print_board ((dict_map [X -> {X}] . dict_copy) T);
-        dict_get T (end R) 
+        print_board ((Dict::map [X -> {X}] . Dict::copy) T);
+        Dict::get T (end R) 
